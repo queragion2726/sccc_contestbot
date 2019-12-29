@@ -27,3 +27,7 @@ class ContestData:
     def __ne__(self, o):
         return self.startDatetime != o.startDatetime
 
+
+    def __repr__(self):
+        return self.contestName + ' ' + self.startDatetime.__repr__()
+
