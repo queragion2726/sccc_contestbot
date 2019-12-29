@@ -50,6 +50,10 @@ class ContestCollection:
             else:
                 return False
 
+    def isIDIn(self, idVal):
+        with self.lock:
+            return idVal in self.lastDatetime
+
     def __repr__(self):
         return self.lastDatetime.__repr__() + '\n' + self.contestHeap[0].__repr__()
 
