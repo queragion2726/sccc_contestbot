@@ -1,4 +1,5 @@
 from slacker import Slacker
+from queue import PriorityQueue
 
 class ContestBot:
     def __init__(self, token = None, slacker = None):
@@ -9,6 +10,11 @@ class ContestBot:
             self.slack = Slacker(token)
         else:
             self.slack = slacker
+
+        self.contestQueue = PriorityQueue()
+
+        
+        
 
     def getContests():
         pass
