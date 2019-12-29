@@ -9,7 +9,21 @@ class ContestData:
         else:
             self.startDatetime = startDatetime
 
-        
+    def __lt__(self, o):
+        return self.startDatetime < o.startDatetime
 
+    def __gt__(self, o):
+        return self.startDatetime > o.startDatetime
 
+    def __le__(self, o):
+        return self.startDatetime <= o.startDatetime
+
+    def __ge__(self, o):
+        return self.startDatetime >= o.startDatetime
+
+    def __eq__(self, o):
+        return self.startDatetime == o.startDatetime
+
+    def __ne__(self, o):
+        return self.startDatetime != o.startDatetime
 
