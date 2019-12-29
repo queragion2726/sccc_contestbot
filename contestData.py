@@ -1,7 +1,8 @@
 from datetime import datetime
 
 class ContestData:
-    def __init__(self, contestName='None', startDatetime=None, URL=''):
+    def __init__(self, idVal, contestName='None', startDatetime=None, URL=''):
+        self.id = idVal
         self.contestName = contestName
         self.URL = URL
         if not startDatetime:
@@ -29,5 +30,6 @@ class ContestData:
 
 
     def __repr__(self):
-        return self.contestName + ' ' + self.startDatetime.__repr__()
+        ret = f'id : {self.id}, name : {self.contestName}, datetime : {self.startDatetime.isoformat()}'
+        return ret
 
