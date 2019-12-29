@@ -1,4 +1,4 @@
-# sccc_contestsbot
+# sccc_contestbot
 
 
 대회 알리미 슬랙 봇
