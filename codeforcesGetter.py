@@ -34,6 +34,7 @@ class CodeforcesGetter(Getter):
                     self.collection.put(data)
             else:
                 # TODO : post newed
+                self.bot.postContest(data)
                 self.collection.put(data)
 
 
