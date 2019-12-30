@@ -30,11 +30,10 @@ class CodeforcesGetter(Getter):
 
             if self.collection.isIDIn(data.id):
                 if self.collection.isModified:
-                    # TODO : post changed
+                    self.bot.postContest(data, status='modified')
                     self.collection.put(data)
             else:
-                # TODO : post newed
-                self.bot.postContest(data)
+                self.bot.postContest(data, status='new')
                 self.collection.put(data)
 
 

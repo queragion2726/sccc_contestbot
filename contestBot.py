@@ -1,17 +1,17 @@
-from slacker import Slacker
 from contestCollection import ContestCollection
 from codeforcesGetter import CodeforcesGetter
 from settings import *
+import slack
 
 class ContestBot:
-    def __init__(self, token = None, slacker = None):
-        if not token and not slacker:
+    def __init__(self, token = None, slackClient = None):
+        if not token and not slackClient:
             raise ValueError
 
         if token is not None:
-            self.slack = Slacker(token)
+            self.slack = slack.WebClient(token=token)
         else:
-            self.slack = slacker
+            self.slack = slackClient
 
         self.contests = ContestCollection()
 
@@ -30,27 +30,26 @@ class ContestBot:
         pass
 
     def postContest(self, contest, status='noti', remain='15분'):
-        format_dict = dict()
-        format_dict['name'] = contest.contestName
-        format_dict['date'] = str(contest.startDatetime)
-        format_dict['URL'] = contest.URL
-        format_dict['remain'] = remain
+        format_dict = {
+            'name': contest.contestName,
+            'datetime': str(contest.startDatetime),
+            'URL': contest.URL,
+            'remain': remain
+        }
+
         msg = None
 
         if status == 'new':
-            msg = dict(NEW_NOTICE_MESSAGE)
+            msg = NEW_NOTICE_MESSAGE.format(**format_dict)
         elif status == 'modified':
-            msg = dict(MODIFIED_NOTICE_MESSAGE)
+            msg = MODIFIED_NOTICE_MESSAGE.format(**format_dict)
         elif status == 'noti':
-            msg = dict(NOTI_NOTICE_MESSAGE)
+            msg = NOTI_NOTICE_MESSAGE.format(**format_dict)
 
-        msg['pretext'] = msg['pretext'].format(**format_dict)
-        msg['title'] = msg['title'].format(**format_dict)
-        msg['text'] = msg['text'].format(**format_dict)
-        msg['title_link'] = msg['title_link'].format(**format_dict)
-        att = [format_dict]
-        att.append({'type':'divider'})
-
-        self.slack.chat.post_message(channel=POST_CHANNEL, text=None, attachments=att)
+        self.slack.chat_postMessage(
+            channel = POST_CHANNEL,
+            text = 'Notification',
+            blocks = msg
+        )
             
 
