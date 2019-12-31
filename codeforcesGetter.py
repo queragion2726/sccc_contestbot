@@ -32,9 +32,10 @@ class CodeforcesGetter(Getter):
                                   contest['startTimeSeconds'])
 
             if self.collection.isIDIn(data.id):
-                if self.collection.isModified(data):
-                    self.bot.postContest(data, status='modified')
-                    self.collection.put(data)
+                #if self.collection.isModified(data):
+                #    self.bot.postContest(data, status='modified')
+                #    self.collection.put(data)
+                pass
             else:
                 self.bot.postContest(data, status='new')
                 self.collection.put(data)
