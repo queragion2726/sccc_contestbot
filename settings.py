@@ -6,8 +6,13 @@ POST_CHANNEL = '#dev-playground'
 
 # NOTICE_TXT will be displayed on app notification, not message.
 # NOTICE_MESSAGE will be displayed like normal message you know.
-# NOTE: NOTICE_MESSAGE should be blocks format
+# NOTE: NOTICE_MESSAGE should be blocks format. Please check on slack api pages.
 # https://api.slack.com/block-kit
+# You can use some formatting to represent the contest information.
+# {name} : contest name
+# {datetime} : start datetime of contest
+# {remain} : remaining time
+# {URL} : URL of contest page
 
 NEW_NOTICE_TXT = '{name} 등록되었습니다!'
 NEW_NOTICE_MESSAGE = """[
