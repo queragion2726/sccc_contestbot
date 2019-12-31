@@ -2,6 +2,7 @@ from contestCollection import ContestCollection
 from codeforcesGetter import CodeforcesGetter
 from settings import *
 import slack
+import threading
 
 class ContestBot:
     def __init__(self, token = None, slackClient = None):
@@ -21,13 +22,18 @@ class ContestBot:
         #
 
         self.getContests()
+        self.runThreads()
         
     def getContests(self):
         for getter in self.getterList:
             getter.putData()
 
-    def runProcess(self):
-        pass
+    def runThreads(self):
+        threads = []
+        for getter in self.getterList:
+            threads.append(threading.Thread(target=getter.start))
+        for thread in threads:
+            thread.start()
 
     def postContest(self, contest, status='noti', remain='15분'):
         format_dict = {
