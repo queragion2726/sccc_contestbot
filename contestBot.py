@@ -43,18 +43,22 @@ class ContestBot:
             'remain': remain
         }
 
+        txt = None
         msg = None
 
         if status == 'new':
+            txt = NEW_NOTICE_TXT.format(**format_dict)
             msg = NEW_NOTICE_MESSAGE.format(**format_dict)
         elif status == 'modified':
+            txt = MODIFIED_NOTICE_TXT.format(**format_dict)
             msg = MODIFIED_NOTICE_MESSAGE.format(**format_dict)
         elif status == 'noti':
+            txt = NOTI_NOTICE_TXT.format(**format_dict)
             msg = NOTI_NOTICE_MESSAGE.format(**format_dict)
 
         self.slack.chat_postMessage(
             channel = POST_CHANNEL,
-            text = 'Notification',
+            text = txt,
             blocks = msg
         )
             
