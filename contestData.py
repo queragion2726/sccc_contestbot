@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from timeStrategy import TimeStrategy
 
 class ContestData:
     def __init__(self, idVal, contestName, startDatetime, URL):
@@ -12,3 +13,21 @@ class ContestData:
         ret = f'id : {self.id}, name : {self.contestName}, datetime : {self.startDatetime.isoformat()}'
         return ret
 
+class NotiData:
+    def __init__(self, contest, timeStrategy):
+        self.contest = contest
+        self.timeStrategy = timeStrategy
+        self.notiTime = contest.startDatetime - timeStrategy.delta
+        self.id = contest.id
+        self.ver = contest.ver
+
+    def __gt__(self, o):
+        return self.notiTime > o.notiTime
+    def __lt__(self, o):
+        return self.notiTime < o.notiTime
+    def __ge__(self, o):
+        return self.notiTime >= o.notiTime
+    def __le__(self, o):
+        return self.notiTime <= o.notiTime
+
+        

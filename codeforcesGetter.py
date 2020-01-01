@@ -30,15 +30,7 @@ class CodeforcesGetter(Getter):
             data = CodeforcesData(contest['id'],
                                   contest['name'],
                                   contest['startTimeSeconds'])
-
-            if self.collection.isIDIn(data.id):
-                #if self.collection.isModified(data):
-                #    self.bot.postContest(data, status='modified')
-                #    self.collection.put(data)
-                pass
-            else:
-                self.bot.postContest(data, status='new')
-                self.collection.put(data)
+            self.collection.put(data)
 
     def start(self):
         while not self.__thicker.wait(self.__TIME_INTERVAL):

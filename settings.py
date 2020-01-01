@@ -1,8 +1,20 @@
 from datetime import datetime
+from timeStrategy import TimeStrategy
+from enum import Enum
+from codeforcesGetter import CodeforcesGetter
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
 
 POST_CHANNEL = '#dev-playground'
+
+class GETTERS(Enum):
+    CODEFORCES = CodeforcesGetter
+
+class NOTI_STRATEGIES(Enum):
+    END = TimeStrategy("for remove", seconds=0)
+    BEFORE_10MINUTES = TimeStrategy("10분 전", minutes=10)
+    BEFORE_30MINUTES = TimeStrategy("30분 전", minutes=30)
+    BEFORE_3HOURS = TimeStrategy("3시간 전", hours=3)
 
 # NOTICE_TXT will be displayed on app notification, not message.
 # NOTICE_MESSAGE will be displayed like normal message you know.

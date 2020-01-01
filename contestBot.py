@@ -16,10 +16,9 @@ class ContestBot:
 
         self.contests = ContestCollection()
 
-        # Hard-code area for getters
         self.getterList = []
-        self.getterList.append(CodeforcesGetter(self, self.contests))
-        #
+        for Getter in GETTERS:
+            self.getterList.append(Getter(self, self.contests))
 
         self.getContests()
         self.runThreads()
@@ -35,12 +34,14 @@ class ContestBot:
         for thread in threads:
             thread.start()
 
-    def postContest(self, contest, status='noti', remain='15분'):
+    def postContest(self, contest, status, notiTimeStrategy=None):
+        if status == 'noti' and not isinstance(notiTimeStrategy, TimeStrategy):
+            raise TypeError
         format_dict = {
             'name': contest.contestName,
             'datetime': str(contest.startDatetime),
             'URL': contest.URL,
-            'remain': remain
+            'remain': notiTimeStrategy.displayText
         }
 
         txt = None
