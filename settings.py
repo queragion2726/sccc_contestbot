@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from timeStrategy import TimeStrategy
 from enum import Enum
+import os
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
 POST_CHANNEL = '#대회_알림_공지방'
+TOKEN = os.environ('SLACK_TOKEN')
 
 # Getters
 # You can append additional getter implementations to GETTERS class
