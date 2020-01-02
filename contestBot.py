@@ -1,7 +1,11 @@
 from contestCollection import ContestCollection
 from codeforcesGetter import CodeforcesGetter
 from scheduleChecker import ScheduleChecker
-from settings import *
+from timeStrategy import TimeStrategy
+from settings import GETTERS, POST_CHANNEL
+from settings import NEW_NOTICE_TXT, NEW_NOTICE_MESSAGE
+from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
+from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
 import slack
 import threading
 

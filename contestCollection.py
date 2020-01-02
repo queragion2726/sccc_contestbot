@@ -1,6 +1,6 @@
 from contestData import ContestData, NotiData
 from datetime import datetime
-from settings import *
+from settings import NOTI_STRATEGIES
 import threading
 import heapq
 
