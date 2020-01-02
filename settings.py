@@ -3,7 +3,7 @@ from timeStrategy import TimeStrategy
 from enum import Enum
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-POST_CHANNEL = '#dev-playground'
+POST_CHANNEL = '#대회_알림_공지방'
 
 # Getters
 # You can append additional getter implementations to GETTERS class
