@@ -12,5 +12,8 @@ class ScheduleChecker:
         self.collection.update()
 
     def start(self):
-        while not self.__thicker.wait(self.__TIME_INTERVAL):
-            self.check()
+        try:
+            while not self.__thicker.wait(self.__TIME_INTERVAL):
+                self.check()
+        except Exception as e:
+            self.bot.postError(e)

@@ -20,15 +20,17 @@ class ContestBot:
             self.slack = slackClient
 
         self.contests = ContestCollection(self)
-
         self.getterList = []
+        self.scheduleChecker = ScheduleChecker(self, self.contests)
+
         for Getter in GETTERS:
             Getter = Getter.value # getter type
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
-        self.scheduleChecker = ScheduleChecker(self, self.contests)
-
+    
+    def run(self):
         self.getContests()
         self.runThreads()
+
         
     def getContests(self):
         for getter in self.getterList:
@@ -38,7 +40,7 @@ class ContestBot:
         threads = []
         for getter in self.getterList:
             threads.append(threading.Thread(target=getter.start))
-        threads.append(threading.Thread(target=self.scheduleChecker.start))
+        threads.append(threading.Thread(target=self.scheduleChecker.start, daemon=True))
         for thread in threads:
             thread.start()
 
@@ -71,5 +73,11 @@ class ContestBot:
             channel = POST_CHANNEL,
             text = txt,
             blocks = msg
+        )
+
+    def postError(self, e):
+        self.slack.chat_postMessage(
+            channel = POST_CHANNEL,
+            text = str(e)
         )
 

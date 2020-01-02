@@ -35,8 +35,11 @@ class CodeforcesGetter(Getter):
             self.collection.put(data)
 
     def start(self):
-        while not self.__thicker.wait(self.__TIME_INTERVAL):
-            self.putData()
+        try:
+            while not self.__thicker.wait(self.__TIME_INTERVAL):
+                self.putData()
+        except Exception as e:
+            self.bot.postError(e)
 
 
 
