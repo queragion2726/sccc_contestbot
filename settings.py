@@ -4,7 +4,7 @@ from enum import Enum
 import os
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-POST_CHANNEL = '#대회_알림_공지방'
+POST_CHANNEL = '#dev-playground'
 TOKEN = os.environ.get('SLACK_TOKEN')
 
 # Getters

@@ -44,6 +44,10 @@ class ContestCollection:
                     heapq.heappop(self.notiHeap)
                     self.heapSize -= 1
                     continue
+
+                if noti.valid():
+                    return
+
                 if noti.timeStrategy == NOTI_STRATEGIES.END.value:
                     heapq.heappop(self.notiHeap)
                     del self.contests[noti.id]
