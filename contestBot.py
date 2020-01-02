@@ -1,5 +1,6 @@
 from contestCollection import ContestCollection
 from codeforcesGetter import CodeforcesGetter
+from scheduleChecker import ScheduleChecker
 from settings import *
 import slack
 import threading
@@ -14,11 +15,13 @@ class ContestBot:
         else:
             self.slack = slackClient
 
-        self.contests = ContestCollection()
+        self.contests = ContestCollection(self)
 
         self.getterList = []
         for Getter in GETTERS:
-            self.getterList.append(Getter(self, self.contests))
+            Getter = Getter.value # getter type
+            self.getterList.append(Getter(self, self.contests)) # construct getter instance
+        self.scheduleChecker = ScheduleChecker(self, self.contests)
 
         self.getContests()
         self.runThreads()
@@ -31,6 +34,7 @@ class ContestBot:
         threads = []
         for getter in self.getterList:
             threads.append(threading.Thread(target=getter.start))
+        threads.append(threading.Thread(target=self.scheduleChecker.start))
         for thread in threads:
             thread.start()
 
@@ -41,8 +45,10 @@ class ContestBot:
             'name': contest.contestName,
             'datetime': str(contest.startDatetime),
             'URL': contest.URL,
-            'remain': notiTimeStrategy.displayText
         }
+
+        if notiTimeStrategy:
+            format_dict['remain'] = notiTimeStrategy.displayText
 
         txt = None
         msg = None
@@ -62,5 +68,4 @@ class ContestBot:
             text = txt,
             blocks = msg
         )
-            
 

@@ -10,10 +10,12 @@ CODEFORCES_PREFIX = 'CF'
 
 class CodeforcesData(ContestData):
     def __init__(self, idVal, name, startTime):
-        self.id = CODEFORCES_PREFIX + str(idVal)
-        self.contestName = name
-        self.startDatetime = datetime.fromtimestamp(startTime, LOCAL_TIMEZONE)
-        self.URL = f'http://codeforces.com/contests/{str(idVal)}'
+        super().__init__(
+            CODEFORCES_PREFIX + str(idVal),
+            name,
+            datetime.fromtimestamp(startTime, LOCAL_TIMEZONE),
+            f'http://codeforces.com/contests/{str(idVal)}'
+        )
 
 class CodeforcesGetter(Getter):
     __TARG_URL = 'http://codeforces.com/api/contest.list?gym=false&lang=en'

@@ -1,20 +1,23 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from timeStrategy import TimeStrategy
 from enum import Enum
-from codeforcesGetter import CodeforcesGetter
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
-
 POST_CHANNEL = '#dev-playground'
 
+# Getters
+# You can append additional getter implementations to GETTERS class
+from codeforcesGetter import CodeforcesGetter
 class GETTERS(Enum):
     CODEFORCES = CodeforcesGetter
 
+# Notification strategies
+# END var is necessary. Don't remove it.
 class NOTI_STRATEGIES(Enum):
     END = TimeStrategy("for remove", seconds=0)
-    BEFORE_10MINUTES = TimeStrategy("10분 전", minutes=10)
-    BEFORE_30MINUTES = TimeStrategy("30분 전", minutes=30)
-    BEFORE_3HOURS = TimeStrategy("3시간 전", hours=3)
+    BEFORE_10MINUTES = TimeStrategy(displayText="10분", minutes=10)
+    BEFORE_30MINUTES = TimeStrategy(displayText="30분", minutes=30)
+    BEFORE_3HOURS = TimeStrategy(displayText="3시간", hours=3)
 
 # NOTICE_TXT will be displayed on app notification, not message.
 # NOTICE_MESSAGE will be displayed like normal message you know.
@@ -23,7 +26,7 @@ class NOTI_STRATEGIES(Enum):
 # You can use some formatting to represent the contest information.
 # {name} : contest name
 # {datetime} : start datetime of contest
-# {remain} : remaining time
+# {remain} : remaining time; value of TimeStrategy.dispalayText
 # {URL} : URL of contest page
 
 NEW_NOTICE_TXT = '{name} 등록되었습니다!'

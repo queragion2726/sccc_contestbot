@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from timeStrategy import TimeStrategy
 
 class ContestData:
@@ -20,6 +20,9 @@ class NotiData:
         self.notiTime = contest.startDatetime - timeStrategy.delta
         self.id = contest.id
         self.ver = contest.ver
+
+    def valid(self):
+        return self.notiTime > datetime.now(timezone.utc)
 
     def __gt__(self, o):
         return self.notiTime > o.notiTime

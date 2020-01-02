@@ -29,8 +29,12 @@ class ContestCollection:
                 self.bot.postContest(item, status='new')
 
             for timeStrategy in NOTI_STRATEGIES:
-                heapq.heappush(self.notiHeap, NotiData(item, timeStrategy))
-                self.heapSize += 1
+                timeStrategy = timeStrategy.value
+                noti = NotiData(item, timeStrategy)
+
+                if noti.valid():
+                    heapq.heappush(self.notiHeap, NotiData(item, timeStrategy))
+                    self.heapSize += 1
 
     def update(self):
         with self.lock:
@@ -38,14 +42,17 @@ class ContestCollection:
                 noti = self.notiHeap[0]
                 if self.contests[noti.id].ver != noti.ver:
                     heapq.heappop(self.notiHeap)
+                    self.heapSize -= 1
                     continue
-                if noti.timeStrategy == NOTI_STRATEGIES.END:
+                if noti.timeStrategy == NOTI_STRATEGIES.END.value:
                     heapq.heappop(self.notiHeap)
                     del self.contests[noti.id]
+                    self.heapSize -= 1
                     continue
 
                 self.bot.postContest(self.contests[noti.id], status='noti', notiTimeStrategy=noti.timeStrategy)
                 heapq.heappop(self.notiHeap)
+                self.heapSize -= 1
 
 
     def isIDIn(self, idVal):
