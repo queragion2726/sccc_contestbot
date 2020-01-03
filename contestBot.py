@@ -40,7 +40,7 @@ class ContestBot:
         threads = []
         for getter in self.getterList:
             threads.append(threading.Thread(target=getter.start))
-        threads.append(threading.Thread(target=self.scheduleChecker.start, daemon=True))
+        threads.append(threading.Thread(target=self.scheduleChecker.start))
         for thread in threads:
             thread.start()
 
