@@ -3,6 +3,7 @@ from datetime import datetime
 from settings import NOTI_STRATEGIES
 import threading
 import heapq
+import logging
 
 class ContestCollection:
     def __init__(self, bot):
@@ -33,11 +34,13 @@ class ContestCollection:
                 noti = NotiData(item, timeStrategy)
 
                 if noti.valid():
-                    heapq.heappush(self.notiHeap, NotiData(item, timeStrategy))
+                    heapq.heappush(self.notiHeap, noti)
                     self.heapSize += 1
+                    logging.debug('noti put ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
 
     def update(self):
         with self.lock:
+            logging.debug('notiheap update : ' +  str(datetime.now()))
             while self.heapSize > 0:
                 noti = self.notiHeap[0]
                 if self.contests[noti.id].ver != noti.ver:
@@ -45,7 +48,10 @@ class ContestCollection:
                     self.heapSize -= 1
                     continue
 
+                logging.debug('noti cur : ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
+
                 if noti.valid():
+                    logging.debug('update END')
                     return
 
                 if noti.timeStrategy == NOTI_STRATEGIES.END.value:

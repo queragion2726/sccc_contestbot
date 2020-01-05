@@ -8,11 +8,13 @@ from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
 from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
 import slack
 import threading
+import logging
 
 class ContestBot:
     def __init__(self, token = None, slackClient = None):
         if not token and not slackClient:
             raise ValueError
+        logging.basicConfig(filename='log.log', level=logging.DEBUG)
 
         if token is not None:
             self.slack = slack.WebClient(token=token)
@@ -26,6 +28,7 @@ class ContestBot:
         for Getter in GETTERS:
             Getter = Getter.value # getter type
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
+        logging.info('Bot init')
     
     def run(self):
         self.getContests()
@@ -80,4 +83,5 @@ class ContestBot:
             channel = POST_CHANNEL,
             text = str(e)
         )
+        logging.error("Error occured " + str(e))
 
