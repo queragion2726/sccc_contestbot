@@ -2,9 +2,11 @@ from getter import Getter
 from contestData import ContestData
 from datetime import datetime
 from settings import LOCAL_TIMEZONE
+from time import sleep
 import requests
 import json
 import threading
+import logging
 
 CODEFORCES_PREFIX = 'CF'
 
@@ -23,7 +25,20 @@ class CodeforcesGetter(Getter):
     __thicker = threading.Event()
 
     def putData(self):
-        req = requests.get(self.__TARG_URL)
+        req = None
+        while True:
+            try:
+                req = requests.get(self.__TARG_URL)
+                if req.status_code >= 500:
+                    sleep(10)
+                    continue
+                break
+            except requests.exceptions.ConnectTimeout:
+                sleep(10)
+                continue
+            except requests.exceptions.RequestException as e:
+                raise e
+
         contestList = json.loads(req.text)['result']
         for contest in contestList:
             if contest['phase'] != 'BEFORE':
