@@ -3,4 +3,4 @@ import os
 from contestBot import ContestBot
 
 A = ContestBot(TOKEN)
-A.run()
+A.run(initNotice=False)

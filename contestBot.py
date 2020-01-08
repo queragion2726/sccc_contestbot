@@ -31,13 +31,13 @@ class ContestBot:
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
         LOGGER.info('Bot init')
     
-    def run(self):
-        self.getContests()
+    def run(self, initNotice=True):
+        self.getContests(initNotice)
         self.runThreads()
         
-    def getContests(self):
+    def getContests(self, noticeOn=True):
         for getter in self.getterList:
-            getter.putData()
+            getter.putData(noticeOn)
 
     def runThreads(self):
         threads = []

@@ -4,7 +4,7 @@ class Getter:
         self.bot = bot
 
     # Collect data and put data in self.collection
-    def putData(self):
+    def putData(self, noticeOn=True):
         raise NotImplementedError
 
     # method for threading

@@ -26,7 +26,7 @@ class CodeforcesGetter(Getter):
     __TIME_INTERVAL = 60
     __thicker = threading.Event()
 
-    def putData(self):
+    def putData(self, noticeOn=True):
         req = None
         while True:
             try:
@@ -49,7 +49,7 @@ class CodeforcesGetter(Getter):
             data = CodeforcesData(contest['id'],
                                   contest['name'],
                                   contest['startTimeSeconds'])
-            self.collection.put(data)
+            self.collection.put(data, noticeOn)
 
     def start(self):
         try:

@@ -16,7 +16,7 @@ class ContestCollection:
         self.heapSize = 0
 
     # item should be ContestData 
-    def put(self, item):
+    def put(self, item, noticeOn):
         if not isinstance(item, ContestData):
             raise TypeError
 
@@ -26,10 +26,12 @@ class ContestCollection:
                     return
                 item.ver = self.contests[item.id].ver + 1
                 self.contests[item.id] = item
-                self.bot.postContest(item, status='modified')
+                if noticeOn:
+                    self.bot.postContest(item, status='modified')
             else:
                 self.contests[item.id] = item
-                self.bot.postContest(item, status='new')
+                if noticeOn:
+                    self.bot.postContest(item, status='new')
 
             for timeStrategy in NOTI_STRATEGIES:
                 timeStrategy = timeStrategy.value
