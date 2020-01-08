@@ -1,4 +1,7 @@
 import threading
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 class ScheduleChecker:
     __TIME_INTERVAL = 59 # Prime :)
@@ -17,3 +20,4 @@ class ScheduleChecker:
                 self.check()
         except Exception as e:
             self.bot.postError(e)
+            LOGGER.error(e)

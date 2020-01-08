@@ -10,11 +10,12 @@ import slack
 import threading
 import logging
 
+LOGGER = logging.getLogger(__name__)
+
 class ContestBot:
     def __init__(self, token = None, slackClient = None):
         if not token and not slackClient:
             raise ValueError
-        logging.basicConfig(filename='log.log', level=logging.DEBUG)
 
         if token is not None:
             self.slack = slack.WebClient(token=token)
@@ -28,12 +29,11 @@ class ContestBot:
         for Getter in GETTERS:
             Getter = Getter.value # getter type
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
-        logging.info('Bot init')
+        LOGGER.info('Bot init')
     
     def run(self):
         self.getContests()
         self.runThreads()
-
         
     def getContests(self):
         for getter in self.getterList:
@@ -54,6 +54,7 @@ class ContestBot:
             'name': contest.contestName,
             'datetime': str(contest.startDatetime),
             'URL': contest.URL,
+            'remain': 'None'
         }
 
         if notiTimeStrategy:
@@ -63,14 +64,14 @@ class ContestBot:
         msg = None
 
         if status == 'new':
-            txt = NEW_NOTICE_TXT.format(**format_dict)
-            msg = NEW_NOTICE_MESSAGE.format(**format_dict)
+            txt = NEW_NOTICE_TXT % format_dict
+            msg = NEW_NOTICE_MESSAGE % format_dict
         elif status == 'modified':
-            txt = MODIFIED_NOTICE_TXT.format(**format_dict)
-            msg = MODIFIED_NOTICE_MESSAGE.format(**format_dict)
+            txt = MODIFIED_NOTICE_TXT % format_dict
+            msg = MODIFIED_NOTICE_MESSAGE % format_dict
         elif status == 'noti':
-            txt = NOTI_NOTICE_TXT.format(**format_dict)
-            msg = NOTI_NOTICE_MESSAGE.format(**format_dict)
+            txt = NOTI_NOTICE_TXT % format_dict
+            msg = NOTI_NOTICE_MESSAGE % format_dict
 
         self.slack.chat_postMessage(
             channel = POST_CHANNEL,
@@ -83,5 +84,4 @@ class ContestBot:
             channel = POST_CHANNEL,
             text = str(e)
         )
-        logging.error("Error occured " + str(e))
 

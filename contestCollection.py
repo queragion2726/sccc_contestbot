@@ -5,6 +5,8 @@ import threading
 import heapq
 import logging
 
+LOGGER = logging.getLogger(__name__)
+
 class ContestCollection:
     def __init__(self, bot):
         self.lock = threading.Lock()

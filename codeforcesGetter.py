@@ -8,6 +8,8 @@ import json
 import threading
 import logging
 
+LOGGER = logging.getLogger(__name__)
+
 CODEFORCES_PREFIX = 'CF'
 
 class CodeforcesData(ContestData):
@@ -55,6 +57,7 @@ class CodeforcesGetter(Getter):
                 self.putData()
         except Exception as e:
             self.bot.postError(e)
+            LOGGER.error(e)
 
 
 
