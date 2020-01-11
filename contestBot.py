@@ -13,14 +13,9 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 class ContestBot:
-    def __init__(self, token = None, slackClient = None):
-        if not token and not slackClient:
-            raise ValueError
-
-        if token is not None:
-            self.slack = slack.WebClient(token=token)
-        else:
-            self.slack = slackClient
+    def __init__(self, token):
+        self.webClient = slack.WebClient(token=token)
+        self.rtmClient = slack.RTMClient(token=token)
 
         self.contests = ContestCollection(self)
         self.getterList = []
@@ -73,15 +68,16 @@ class ContestBot:
             txt = NOTI_NOTICE_TXT % format_dict
             msg = NOTI_NOTICE_MESSAGE % format_dict
 
-        self.slack.chat_postMessage(
+        self.webClient.chat_postMessage(
             channel = POST_CHANNEL,
             text = txt,
             blocks = msg
         )
 
     def postError(self, e):
-        self.slack.chat_postMessage(
+        self.webClient.chat_postMessage(
             channel = POST_CHANNEL,
             text = str(e)
         )
+
 
