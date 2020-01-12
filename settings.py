@@ -22,7 +22,8 @@ class GETTERS(Enum):
 class NOTI_STRATEGIES(Enum):
     END = TimeStrategy("for remove", seconds=0)
     BEFORE_10MINUTES = TimeStrategy(displayText="10분", minutes=10)
-    BEFORE_3HOURS = TimeStrategy(displayText="1시간", hours=1)
+    BEFORE_1HOURS = TimeStrategy(displayText="1시간", hours=1)
+    BEFORE_3HOURS = TimeStrategy(displayText="3시간", hours=3)
     BEFORE_1DAYS = TimeStrategy(displayText="하루", days=1)
 
 # NOTICE_TXT will be displayed on app notification, not message.
