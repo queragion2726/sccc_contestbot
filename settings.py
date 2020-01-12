@@ -128,3 +128,19 @@ NOTI_NOTICE_MESSAGE = """
     }
 ]
 """
+
+CANCELED_NOTICE_TXT = '%(name)s 취소되었습니다.'
+CANCELED_NOTICE_MESSAGE = """
+[
+	{
+		'type': 'section',
+		'text': {
+			'type': 'mrkdwn',
+			'text': '*%(name)s* 대회가 취소되었습니다. :blobbandage:'
+		}
+	},
+	{
+		'type': 'divider'
+    }
+]
+"""

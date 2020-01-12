@@ -11,42 +11,69 @@ class ContestCollection:
     def __init__(self, bot):
         self.lock = threading.Lock()
         self.contests = dict()
+        self.putChk = dict()
         self.notiHeap = list()
         self.bot = bot
         self.heapSize = 0
 
-    # item should be ContestData 
+    def __enter__(self):
+        self.lock.acquire()
+        self.putChk.clear()
+        for idVal in self.contests:
+            self.putChk[idVal] = False
+        return self
+
+    def __exit__(self, type, value, traceback):
+        for idVal in self.putChk:
+            if not self.putChk[idVal]:
+                self.bot.postContest(self.contests[idVal], 'canceled')
+                del self.contests[idVal]
+        self.lock.release()
+
     def put(self, item, noticeOn):
+        # item should be ContestData 
+        # You should put items with following codes;
+        '''
+        with collection:
+            for data in contest
+                collection.put(data)
+        '''
         if not isinstance(item, ContestData):
             raise TypeError
 
-        with self.lock:
-            if item.id in self.contests:
-                if item.startDatetime == self.contests[item.id].startDatetime:
-                    return
-                item.ver = self.contests[item.id].ver + 1
-                self.contests[item.id] = item
-                if noticeOn:
-                    self.bot.postContest(item, status='modified')
-            else:
-                self.contests[item.id] = item
-                if noticeOn:
-                    self.bot.postContest(item, status='new')
+        if item.id in self.contests:
+            if item.startDatetime == self.contests[item.id].startDatetime:
+                return
+            item.ver = self.contests[item.id].ver + 1
+            self.contests[item.id] = item
+            if noticeOn:
+                self.bot.postContest(item, status='modified')
+        else:
+            self.contests[item.id] = item
+            if noticeOn:
+                self.bot.postContest(item, status='new')
 
-            for timeStrategy in NOTI_STRATEGIES:
-                timeStrategy = timeStrategy.value
-                noti = NotiData(item, timeStrategy)
+        self.putChk[item.id] = True
 
-                if noti.valid():
-                    heapq.heappush(self.notiHeap, noti)
-                    self.heapSize += 1
-                    logging.debug('noti put ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
+        for timeStrategy in NOTI_STRATEGIES:
+            timeStrategy = timeStrategy.value
+            noti = NotiData(item, timeStrategy)
+
+            if noti.valid():
+                heapq.heappush(self.notiHeap, noti)
+                self.heapSize += 1
+                logging.debug('noti put ' + str(noti.notiTime) +
+                               ' ' + noti.contest.contestName)
 
     def update(self):
         with self.lock:
             logging.debug('notiheap update : ' +  str(datetime.now()))
             while self.heapSize > 0:
                 noti = self.notiHeap[0]
+                if noti.id not in self.contests:
+                    heapq.heappop(self.notiHeap)
+                    self.heapSize -= 1
+                    continue
                 if self.contests[noti.id].ver != noti.ver:
                     heapq.heappop(self.notiHeap)
                     self.heapSize -= 1

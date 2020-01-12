@@ -6,6 +6,7 @@ from settings import GETTERS, POST_CHANNEL
 from settings import NEW_NOTICE_TXT, NEW_NOTICE_MESSAGE
 from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
 from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
+from settings import CANCELED_NOTICE_TXT, CANCELED_NOTICE_MESSAGE
 import slack
 import threading
 import logging
@@ -75,6 +76,9 @@ class ContestBot:
         elif status == 'noti':
             txt = NOTI_NOTICE_TXT % format_dict
             msg = NOTI_NOTICE_MESSAGE % format_dict
+        elif status == 'canceled':
+            txt = CANCELED_NOTICE_TXT % format_dict
+            txt = CANCELED_NOTICE_MESSAGE % format_dict
 
         self.webClient.chat_postMessage(
             channel = POST_CHANNEL,

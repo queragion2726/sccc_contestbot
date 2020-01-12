@@ -42,14 +42,15 @@ class CodeforcesGetter(Getter):
                 raise e
 
         contestList = json.loads(req.text)['result']
-        for contest in contestList:
-            if contest['phase'] != 'BEFORE':
-                break
+        with self.collection:
+            for contest in contestList:
+                if contest['phase'] != 'BEFORE':
+                    break
 
-            data = CodeforcesData(contest['id'],
-                                  contest['name'],
-                                  contest['startTimeSeconds'])
-            self.collection.put(data, noticeOn)
+                data = CodeforcesData(contest['id'],
+                                      contest['name'],
+                                      contest['startTimeSeconds'])
+                self.collection.put(data, noticeOn)
 
     def start(self):
         try:
