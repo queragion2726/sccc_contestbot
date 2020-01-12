@@ -12,6 +12,12 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+@slack.RTMClient.run_on(event='message')
+def postSubscriber(**payloads):
+    data = payloads['data']
+    if 'subtype' in data and data['subtype'] == 'bot_message' and 'thread_ts' not in data:
+        LOGGER.info('bot comment')
+
 class ContestBot:
     def __init__(self, token):
         self.webClient = slack.WebClient(token=token)
@@ -24,11 +30,13 @@ class ContestBot:
         for Getter in GETTERS:
             Getter = Getter.value # getter type
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
+
         LOGGER.info('Bot init')
     
     def run(self, initNotice=True):
         self.getContests(initNotice)
         self.runThreads()
+        self.rtmClient.start()
         
     def getContests(self, noticeOn=True):
         for getter in self.getterList:
@@ -79,5 +87,3 @@ class ContestBot:
             channel = POST_CHANNEL,
             text = str(e)
         )
-
-
