@@ -46,6 +46,7 @@ class SubscriberManager:
                 return
             with open(self.__FILE_NAME, 'a') as file:
                 file.write(user + '\n')
+            self.lists.append(user)
         self.bot.postText(APPEND_SUCCESS)
         LOGGER.debug(user + 'appended')
 

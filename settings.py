@@ -146,6 +146,8 @@ CANCELED_NOTICE_MESSAGE = """
 """
 
 
+SUBSCRIBE_KEYWORD = '!구독'
+UNSUBSCRIBE_KEYWORD = '!구독해제'
 
 NO_SUCH_USER = '그러한 유저가 존재하지 않습니다.'
 ALREADY_EXISTS = '이미 목록에 추가된 유저입니다.'
