@@ -8,7 +8,7 @@ LOGGER = logging.getLogger(__name__)
 
 class SubscriberManager:
     __FILE_NAME = 'subscriber.list'
-    __RE_REPR = re.compile('\S+')
+    __RE_REPR = re.compile(r'\S+')
 
     def __init__(self, bot):
         self.lock = threading.Lock()
