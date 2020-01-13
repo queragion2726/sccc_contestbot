@@ -8,6 +8,7 @@ from settings import NEW_NOTICE_TXT, NEW_NOTICE_MESSAGE
 from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
 from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
 from settings import CANCELED_NOTICE_TXT, CANCELED_NOTICE_MESSAGE
+from settings import SUBSCRIBE_KEYWORD, UNSUBSCRIBE_KEYWORD
 import slack
 import threading
 import logging
@@ -29,6 +30,8 @@ class ContestBot:
             self.getterList.append(Getter(self, self.contests)) # construct getter instance
 
         slack.RTMClient.run_on(event='message')(self.postSubscriber)
+        slack.RTMClient.run_on(event='message')(self.appendSubscriber)
+        slack.RTMClient.run_on(event='message')(self.deleteSubscriber)
         slack.RTMClient.run_on(event='message')(self.testPost)
 
         LOGGER.info('Bot init')
@@ -99,24 +102,44 @@ class ContestBot:
 
     def postSubscriber(self, **payload):
         data = payload['data']
-        if 'subtype' in data and data['subtype'] == 'bot_message' and 'thread_ts' not in data:
+        if 'subtype' in data and data['subtype'] == 'bot_message' \
+                            and 'thread_ts' not in data and 'blocks' in data:
             webClient = payload['web_client']
             channel_id = data['channel']
             thread_ts = data['ts']
             text = ' '.join((f'<@{user}>' for user in self.subscriberManager.get()))
+            if text == '':
+                return
             webClient.chat_postMessage(
                 channel = channel_id,
                 text = text,
-                thread_ts = thread_ts,
-                mrkdwn=True
+                thread_ts = thread_ts
             )
+
+    def appendSubscriber(self, **payload):
+        data = payload['data']
+        if 'user' in data and SUBSCRIBE_KEYWORD == data['text']:
+            self.subscriberManager.append(data['user'])
+
+    def deleteSubscriber(self, **payload):
+        data = payload['data']
+        if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
+            self.subscriberManager.delete(data['user'])
+
 
     def testPost(self, **payload):
         data = payload['data']
         if 'user' in data and '!Test' in data['text']:
             payload['web_client'].chat_postMessage(
                 channel = POST_CHANNEL,
-                text = 'test!'
+                text = 'test!',
+                blocks=[{
+			        "type": "section",
+			        "text": {
+			        	"type": "mrkdwn",
+			        	"text": "Test"
+			        }
+		        }]
             ) 
 
 
