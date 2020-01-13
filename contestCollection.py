@@ -40,6 +40,8 @@ class ContestCollection:
         if not isinstance(item, ContestData):
             raise TypeError
 
+        self.putChk[item.id] = True
+
         if item.id in self.contests:
             if item.startDatetime == self.contests[item.id].startDatetime:
                 return
@@ -51,8 +53,6 @@ class ContestCollection:
             self.contests[item.id] = item
             if noticeOn:
                 self.bot.postContest(item, status='new')
-
-        self.putChk[item.id] = True
 
         for timeStrategy in NOTI_STRATEGIES:
             timeStrategy = timeStrategy.value

@@ -78,7 +78,7 @@ class ContestBot:
             msg = NOTI_NOTICE_MESSAGE % format_dict
         elif status == 'canceled':
             txt = CANCELED_NOTICE_TXT % format_dict
-            txt = CANCELED_NOTICE_MESSAGE % format_dict
+            msg = CANCELED_NOTICE_MESSAGE % format_dict
 
         self.webClient.chat_postMessage(
             channel = POST_CHANNEL,
