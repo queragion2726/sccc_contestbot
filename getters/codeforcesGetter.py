@@ -1,4 +1,4 @@
-from getter import Getter
+from getters.getter import Getter
 from contestData import ContestData
 from datetime import datetime
 from settings import LOCAL_TIMEZONE

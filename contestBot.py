@@ -1,5 +1,5 @@
 from contestCollection import ContestCollection
-from codeforcesGetter import CodeforcesGetter
+from getters.codeforcesGetter import CodeforcesGetter
 from scheduleChecker import ScheduleChecker
 from subscriberManager import SubscriberManager
 from timeStrategy import TimeStrategy

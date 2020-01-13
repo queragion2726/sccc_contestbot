@@ -13,7 +13,7 @@ TOKEN = os.environ.get('SLACK_API_TOKEN')
 
 # Getters
 # You can append additional getter implementations to GETTERS class
-from codeforcesGetter import CodeforcesGetter
+from getters.codeforcesGetter import CodeforcesGetter
 class GETTERS(Enum):
     CODEFORCES = CodeforcesGetter
 
