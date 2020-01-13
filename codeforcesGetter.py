@@ -31,15 +31,19 @@ class CodeforcesGetter(Getter):
         while True:
             try:
                 req = requests.get(self.__TARG_URL)
-                if req.status_code >= 500:
-                    sleep(10)
-                    continue
-                break
             except requests.exceptions.ConnectTimeout:
-                sleep(10)
+                sleep(60)
                 continue
-            except requests.exceptions.RequestException as e:
+            except Exception as e:
                 raise e
+
+            if req.status_code == 200:
+                break
+            elif req.status_code in [500, 503]:
+                sleep(60)
+                continue
+            else:
+                req.raise_for_status()
 
         contestList = json.loads(req.text)['result']
         with self.collection:
