@@ -14,7 +14,6 @@ class ContestCollection:
         self.putChk = dict()
         self.notiHeap = list()
         self.bot = bot
-        self.heapSize = 0
 
     def __enter__(self):
         self.lock.acquire()
@@ -61,22 +60,19 @@ class ContestCollection:
 
             if noti.valid():
                 heapq.heappush(self.notiHeap, noti)
-                self.heapSize += 1
                 logging.debug('noti put ' + str(noti.notiTime) +
                                ' ' + noti.contest.contestName)
 
     def update(self):
         with self.lock:
             logging.debug('notiheap update : ' +  str(datetime.now()))
-            while self.heapSize > 0:
+            while len(self.notiHeap) > 0:
                 noti = self.notiHeap[0]
                 if noti.id not in self.contests:
                     heapq.heappop(self.notiHeap)
-                    self.heapSize -= 1
                     continue
                 if self.contests[noti.id].ver != noti.ver:
                     heapq.heappop(self.notiHeap)
-                    self.heapSize -= 1
                     continue
 
                 logging.debug('noti cur : ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
@@ -88,12 +84,10 @@ class ContestCollection:
                 if noti.timeStrategy == NOTI_STRATEGIES.END.value:
                     heapq.heappop(self.notiHeap)
                     del self.contests[noti.id]
-                    self.heapSize -= 1
                     continue
 
                 self.bot.postContest(self.contests[noti.id], status='noti', notiTimeStrategy=noti.timeStrategy)
                 heapq.heappop(self.notiHeap)
-                self.heapSize -= 1
 
 
     def isIDIn(self, idVal):
