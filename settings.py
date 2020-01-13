@@ -144,3 +144,10 @@ CANCELED_NOTICE_MESSAGE = """
     }
 ]
 """
+
+
+
+NO_SUCH_USER = '그러한 유저가 존재하지 않습니다.'
+ALREADY_EXISTS = '이미 목록에 추가된 유저입니다.'
+APPEND_SUCCESS = '구독에 추가해 드렸습니다.'
+DELETE_SUCCESS = '구독에서 제거해 드렸습니다.'
