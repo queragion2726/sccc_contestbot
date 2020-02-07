@@ -14,8 +14,9 @@ class ContestData:
         return ret
 
 class NotiData:
-    def __init__(self, contest, timeStrategy):
+    def __init__(self, contest, group, timeStrategy):
         self.contest = contest
+        self.group = group 
         self.timeStrategy = timeStrategy
         self.notiTime = contest.startDatetime - timeStrategy.delta
         self.id = contest.id

@@ -11,12 +11,6 @@ POST_CHANNEL = '#dev-playground'
 #POST_CHANNEL = '#대회_알림_공지방'
 TOKEN = os.environ.get('SLACK_API_TOKEN')
 
-# Getters
-# You can append additional getter implementations to GETTERS class
-from getters.codeforcesGetter import CodeforcesGetter
-class GETTERS(Enum):
-    CODEFORCES = CodeforcesGetter
-
 # Notification strategies
 # END var is necessary. Don't remove it.
 class NOTI_STRATEGIES(Enum):

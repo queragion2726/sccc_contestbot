@@ -1,59 +1,69 @@
-from contestCollection import ContestCollection
-from getters.codeforcesGetter import CodeforcesGetter
-from scheduleChecker import ScheduleChecker
-from subscriberManager import SubscriberManager
+import threading
+import logging
+import asyncio
+
 from timeStrategy import TimeStrategy
-from settings import GETTERS, POST_CHANNEL
+from settings import POST_CHANNEL
 from settings import NEW_NOTICE_TXT, NEW_NOTICE_MESSAGE
 from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
 from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
 from settings import CANCELED_NOTICE_TXT, CANCELED_NOTICE_MESSAGE
 from settings import SUBSCRIBE_KEYWORD, UNSUBSCRIBE_KEYWORD
+
 import slack
-import threading
-import logging
 
 LOGGER = logging.getLogger(__name__)
 
 class ContestBot:
     def __init__(self, token):
-        self.webClient = slack.WebClient(token=token)
-        self.rtmClient = slack.RTMClient(token=token)
+        self.rtmClient = slack.RTMClient(token=token, run_async=True)
+        self.token = token
 
-        self.contests = ContestCollection(self)
-        self.getterList = []
-        self.scheduleChecker = ScheduleChecker(self, self.contests)
-        self.subscriberManager = SubscriberManager(self)
-
-        for Getter in GETTERS:
-            Getter = Getter.value # getter type
-            self.getterList.append(Getter(self, self.contests)) # construct getter instance
+        self.collectors = []
 
         slack.RTMClient.run_on(event='message')(self.postSubscriber)
         slack.RTMClient.run_on(event='message')(self.appendSubscriber)
         slack.RTMClient.run_on(event='message')(self.deleteSubscriber)
         slack.RTMClient.run_on(event='message')(self.testPost)
 
-        LOGGER.info('Bot init')
-    
-    def run(self, initNotice=True):
-        self.getContests(initNotice)
-        self.runThreads()
-        self.rtmClient.start()
-        
-    def getContests(self, noticeOn=True):
-        for getter in self.getterList:
-            getter.putData(noticeOn)
+        LOGGER.debug('Bot init')
 
-    def runThreads(self):
-        threads = []
-        for getter in self.getterList:
-            threads.append(threading.Thread(target=getter.start))
-        threads.append(threading.Thread(target=self.scheduleChecker.start))
-        for thread in threads:
-            thread.start()
+    def addCollector(self, collectorType):
+        self.collectors.append(collectorType(self.token))
 
-    def postContest(self, contest, status, notiTimeStrategy=None):
+    def start(self, initNotice=True):
+        loop = asyncio.get_event_loop()
+
+        initUpdates = (col.update(repeat=False, noticeOn=initNotice) for col in self.collectors)
+        tasks = asyncio.gather(*initUpdates)
+        loop.run_until_complete(tasks)
+
+        endlessUpdates = (col.update(repeat=True) for col in self.collectors)
+        tasks = asyncio.gather(*endlessUpdates, self.rtmClient.start())
+
+        import signal
+        def stopCallback(signum, frame):
+            tasks.cancel()
+
+        signal.signal(signal.SIGINT, stopCallback)
+        signal.signal(signal.SIGTERM, stopCallback)
+
+        try:
+            loop.run_until_complete(tasks) #run forever
+        except asyncio.CancelledError:
+            print('Bot Cancelled')
+            LOGGER.debug('Bot Cancelled')
+        except Exception as e:
+            LOGGER.error(e)
+            try:
+                tasks.cancel()
+            except asyncio.CancelledError:
+                pass
+        finally:
+            loop.stop()
+
+    @staticmethod
+    async def postContest(contest, status, webClient, notiTimeStrategy=None):
         if status == 'noti' and not isinstance(notiTimeStrategy, TimeStrategy):
             raise TypeError
         format_dict = {
@@ -82,64 +92,53 @@ class ContestBot:
             txt = CANCELED_NOTICE_TXT % format_dict
             msg = CANCELED_NOTICE_MESSAGE % format_dict
 
-        self.webClient.chat_postMessage(
-            channel = POST_CHANNEL,
-            text = txt,
-            blocks = msg
-        )
+        LOGGER.debug(msg)
+        await webClient.chat_postMessage(
+                channel = POST_CHANNEL,
+                text = txt,
+                blocks = msg
+            )
 
-    def postError(self, e):
-        self.webClient.chat_postMessage(
-            channel = POST_CHANNEL,
-            text = str(e)
-        )
-
-    def postText(self, txt):
-        self.webClient.chat_postMessage(
-            channel = POST_CHANNEL,
-            text = txt
-        )
-
-    def postSubscriber(self, **payload):
+    async def postSubscriber(self, **payload):
         data = payload['data']
         if 'subtype' in data and data['subtype'] == 'bot_message' \
                             and 'thread_ts' not in data and 'blocks' in data:
             webClient = payload['web_client']
             channel_id = data['channel']
             thread_ts = data['ts']
-            text = ' '.join((f'<@{user}>' for user in self.subscriberManager.get()))
+            text = ' '#.join((f'<@{user}>' for user in self.subscriberManager.get()))
             if text == '':
                 return
-            webClient.chat_postMessage(
-                channel = channel_id,
-                text = text,
-                thread_ts = thread_ts
-            )
+
+            await webClient.chat_postMessage(
+                    channel = channel_id,
+                    text = text,
+                    thread_ts = thread_ts
+                )
 
     def appendSubscriber(self, **payload):
         data = payload['data']
-        if 'user' in data and SUBSCRIBE_KEYWORD == data['text']:
-            self.subscriberManager.append(data['user'])
+        #if 'user' in data and SUBSCRIBE_KEYWORD == data['text']:
+        #    self.subscriberManager.append(data['user'])
 
     def deleteSubscriber(self, **payload):
         data = payload['data']
-        if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
-            self.subscriberManager.delete(data['user'])
+        #if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
+        #    self.subscriberManager.delete(data['user'])
 
-
-    def testPost(self, **payload):
+    async def testPost(self, **payload):
         data = payload['data']
         if 'user' in data and '!Test' in data['text']:
-            payload['web_client'].chat_postMessage(
-                channel = POST_CHANNEL,
-                text = 'test!',
-                blocks=[{
-			        "type": "section",
-			        "text": {
-			        	"type": "mrkdwn",
-			        	"text": "Test"
-			        }
-		        }]
-            ) 
+            await payload['web_client'].chat_postMessage(
+                    channel = POST_CHANNEL,
+                    text = 'test!',
+                    blocks=[{
+    			        "type": "section",
+			            "text": {
+			            	"type": "mrkdwn",
+			            	"text": "Test"
+			            }
+		            }]
+                ) 
 
 

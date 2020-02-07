@@ -1,6 +1,8 @@
 from settings import TOKEN
 import os
 from contestBot import ContestBot
+from getters.codeforcesCollector import CodeforcesCollector
 
-A = ContestBot(TOKEN)
-A.run(initNotice=False)
+bot = ContestBot(TOKEN)
+bot.addCollector(CodeforcesCollector)
+bot.start(initNotice=False)

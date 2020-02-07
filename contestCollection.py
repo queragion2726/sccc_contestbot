@@ -1,6 +1,6 @@
 from contestData import ContestData, NotiData
 from datetime import datetime
-from settings import NOTI_STRATEGIES
+from settings import NOTI_STRATEGIES, GETTERS
 import threading
 import heapq
 import logging
@@ -10,89 +10,93 @@ LOGGER = logging.getLogger(__name__)
 class ContestCollection:
     def __init__(self, bot):
         self.lock = threading.Lock()
-        self.contests = dict()
-        self.putChk = dict()
+        self.contestGroups = dict()
         self.notiHeap = list()
-        self.bot = bot
 
-    def __enter__(self):
-        self.lock.acquire()
-        self.putChk.clear()
-        for idVal in self.contests:
-            self.putChk[idVal] = False
-        return self
+        for getter in GETTERS:
+            getter = getter.value
+            self.contestGroups[getter.getPrefix()] = dict()
 
-    def __exit__(self, type, value, traceback):
-        for idVal in self.putChk:
-            if not self.putChk[idVal]:
-                self.bot.postContest(self.contests[idVal], 'canceled')
-                del self.contests[idVal]
-        self.lock.release()
 
-    def put(self, item, noticeOn):
-        # item should be ContestData 
-        # You should put items with following codes;
-        '''
-        with collection:
-            for data in contest
-                collection.put(data)
-        '''
-        if not isinstance(item, ContestData):
-            raise TypeError
-
-        self.putChk[item.id] = True
-
-        if item.id in self.contests:
-            if item.startDatetime == self.contests[item.id].startDatetime:
-                return
-            item.ver = self.contests[item.id].ver + 1
-            self.contests[item.id] = item
-            if noticeOn:
-                self.bot.postContest(item, status='modified')
-        else:
-            self.contests[item.id] = item
-            if noticeOn:
-                self.bot.postContest(item, status='new')
-
-        for timeStrategy in NOTI_STRATEGIES:
-            timeStrategy = timeStrategy.value
-            noti = NotiData(item, timeStrategy)
-
-            if noti.valid():
-                heapq.heappush(self.notiHeap, noti)
-                logging.debug('noti put ' + str(noti.notiTime) +
-                               ' ' + noti.contest.contestName)
-
-    def update(self):
+    def open(self, prefixKey, webClient):
+        ret = None
         with self.lock:
-            logging.debug('notiheap update : ' +  str(datetime.now()))
-            while len(self.notiHeap) > 0:
-                noti = self.notiHeap[0]
-                if noti.id not in self.contests:
-                    heapq.heappop(self.notiHeap)
-                    continue
-                if self.contests[noti.id].ver != noti.ver:
-                    heapq.heappop(self.notiHeap)
-                    continue
+            ret = self.PutHandler(self, prefixKey, webClient)
+        return ret
 
-                logging.debug('noti cur : ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
+    class PutHandler:
+        def __init__(self, collection, prefixKey, webClient):
+            self.lock = collection.lock
+            self.group = collection.contestGroups[prefixKey]
+            self.notiHeap = collection.notiHeap
+            self.webClient = webClient
+            self.putCheck = dict()
+
+        def __enter__(self):
+            self.lock.acquire()
+            self.putCheck.clear()
+            for idVal in self.group:
+                self.putCheck[idVal] = False
+            return self
+
+        def __exit__(self, type, value, traceback):
+            for idVal in self.putCheck:
+                if not self.putCheck[idVal]:
+                    self.bot.postContest(self.group[idVal], 'canceled')
+                    del self.group[idVal]
+            self.lock.release()
+            return
+
+        def put(self, item, noticeOn):
+            # item should be ContestData 
+            if not isinstance(item, ContestData):
+                raise TypeError
+
+            self.putCheck[item.id] = True
+
+            if item.id in self.group:
+                if item.startDatetime == self.group[item.id].startDatetime:
+                    return
+                item.ver = self.group[item.id].ver + 1
+                self.group[item.id] = item
+                if noticeOn:
+                    self.bot.postContest(item, status='modified', self.webClient)
+            else:
+                self.group[item.id] = item
+                if noticeOn:
+                    self.bot.postContest(item, status='new', self.webClient)
+
+            for timeStrategy in NOTI_STRATEGIES:
+                timeStrategy = timeStrategy.value
+                noti = NotiData(item, self.group, timeStrategy)
 
                 if noti.valid():
-                    logging.debug('update END')
-                    return
+                    heapq.heappush(self.notiHeap, noti)
+                    logging.debug('noti put ' + str(noti.notiTime) +
+                                   ' ' + noti.contest.contestName)
+
+    def update(self):
+        logging.debug('notiheap update, notiheap size : ' + str(len(self.notiHeap)))
+        with self.lock:
+            while len(self.notiHeap) > 0:
+                noti = self.notiHeap[0]
+                logging.debug('noti cur : ' + str(noti.notiTime) + ' ' + noti.contest.contestName)
+
+                if noti.id not in noti.group:
+                    heapq.heappop(self.notiHeap)
+                    continue
+                if noti.group[noti.id].ver != noti.ver:
+                    heapq.heappop(self.notiHeap)
+                    continue
+
+                if noti.valid():
+                    break
 
                 if noti.timeStrategy == NOTI_STRATEGIES.END.value:
                     heapq.heappop(self.notiHeap)
-                    del self.contests[noti.id]
+                    del noti.group[noti.id]
                     continue
 
-                self.bot.postContest(self.contests[noti.id], status='noti', notiTimeStrategy=noti.timeStrategy)
+                self.bot.postContest(noti.group[noti.id], status='noti', notiTimeStrategy=noti.timeStrategy)
                 heapq.heappop(self.notiHeap)
-
-
-    def isIDIn(self, idVal):
-        with self.lock:
-            return idVal in self.contests
-
-
-
+        logging.debug('update END')
