@@ -55,10 +55,8 @@ class NotiData:
         return self.notiTime <= o.notiTime
 
 class Collector:
-    #_CHECK_INTERVAL = 59
-    _CHECK_INTERVAL = 6
-    #_UPDATE_INTERVAL = 61 # coprime with 59 :)
-    _UPDATE_INTERVAL = 10
+    _CHECK_INTERVAL = 59
+    _UPDATE_INTERVAL = 61 # coprime with 59 :)
     _MAX_ERROR_WAIT_TIME = 60*20
 
     def __init__(self, bot):

@@ -25,7 +25,6 @@ class CodeforcesData(ContestData):
 
 class CodeforcesCollector(Collector):
     _TARG_URL = 'http://codeforces.com/api/contest.list?gym=false&lang=en'
-    #_TARG_URL = 'http://127.0.0.1/'
 
     async def getData(self, noticeOn=True):
         LOGGER.debug(CODEFORCES_PREFIX + " getData()")
