@@ -34,21 +34,35 @@ class BaekjoonCollector(Collector):
 
     async def getData(self, noticeOn=True):
         ret = []
-        async with aiohttp.ClientSession() as session:
-            async with session.get(self._TARG_URL) as resp:
-                req = await resp.text()
-                soup = BeautifulSoup(req, features='html.parser')
-        
-                contestList = soup.find_all('tr', {'class':'info'})
-                for contest in contestList:
-                    contents = contest.contents
-                    idVal = contents[1].a.attrs['href'].split('/')[-1]
-                    name = contents[1].a.text
-                    startTime = contents[7].text
+        self.attemptCount = 0
+        while True:
+            self.attemptCount += 1
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(self._TARG_URL) as resp:
+                        req = await resp.text()
+                        soup = BeautifulSoup(req, features='html.parser')
+                
+                        contestList = soup.find_all('tr', {'class':'info'})
+                        for contest in contestList:
+                            contents = contest.contents
+                            idVal = contents[1].a.attrs['href'].split('/')[-1]
+                            name = contents[1].a.text
+                            startTime = contents[7].text
 
-                    data = BaekjoonData(idVal, name, startTime)
+                            data = BaekjoonData(idVal, name, startTime)
 
-                    ret.append(data)
+                            ret.append(data)
+                break
+            except aiohttp.ClientError as e:
+                LOGGER.error(e)
+                await self.errorWait()
+                continue
+            except Exception as e:
+                LOGGER.error(e)
+                await self.bot.postText(BOJ_PREFIX+str(e))
+                await self.errorWait()
+                continue
         return ret
 
 
