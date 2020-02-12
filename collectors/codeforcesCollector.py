@@ -52,7 +52,7 @@ class CodeforcesCollector(Collector):
                 continue
             except Exception as e:
                 LOGGER.error(e)
-                await self.bot.postText(str(e))
+                await self.bot.postText(CODEFORCES_PREFIX+ str(e))
                 await self.errorWait()
                 continue
 
