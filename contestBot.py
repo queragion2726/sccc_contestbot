@@ -4,6 +4,7 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from timeStrategy import TimeStrategy
+from subscriberManager import SubscriberManager
 from settings import POST_CHANNEL
 from settings import NEW_NOTICE_TXT, NEW_NOTICE_MESSAGE
 from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
@@ -22,6 +23,7 @@ class ContestBot:
                                          loop=self.eventLoop)
         self.webClient = slack.WebClient(token=token, run_async=True,
                                          loop=self.eventLoop)
+        self.subscriberManager = SubscriberManager(self)
         self.collectors = []
 
         slack.RTMClient.run_on(event='message')(self.postSubscriber)
@@ -32,7 +34,7 @@ class ContestBot:
         LOGGER.debug('Bot init')
 
     def addCollector(self, collectorType):
-        self.collectors.append(collectorType(self.webClient))
+        self.collectors.append(collectorType(self))
 
     def start(self, initNotice=True):
         loop = self.eventLoop
@@ -68,8 +70,7 @@ class ContestBot:
         finally:
             loop.close()
 
-    @staticmethod
-    async def postContest(contest, status, webClient, notiTimeStrategy=None):
+    async def postContest(self, contest, status, notiTimeStrategy=None):
         if status == 'noti' and not isinstance(notiTimeStrategy, TimeStrategy):
             raise TypeError
         format_dict = {
@@ -99,11 +100,17 @@ class ContestBot:
             msg = CANCELED_NOTICE_MESSAGE % format_dict
 
         LOGGER.debug(msg)
-        await webClient.chat_postMessage(
+        await self.webClient.chat_postMessage(
                 channel = POST_CHANNEL,
                 text = txt,
                 blocks = msg
             )
+
+    async def postText(self, text):
+        await self.webClient.chat_postMessage(
+            channel = POST_CHANNEL,
+            text = text
+        )
 
     async def postSubscriber(self, **payload):
         data = payload['data']
@@ -112,7 +119,9 @@ class ContestBot:
             webClient = payload['web_client']
             channel_id = data['channel']
             thread_ts = data['ts']
-            text = ' '#.join((f'<@{user}>' for user in self.subscriberManager.get()))
+
+            subscribe_list = await self.subscriberManager.get()
+            text = ' '.join(f'<@{user}>' for user in subscribe_list)
             if text == '':
                 return
 
@@ -122,15 +131,15 @@ class ContestBot:
                     thread_ts = thread_ts
                 )
 
-    def appendSubscriber(self, **payload):
+    async def appendSubscriber(self, **payload):
         data = payload['data']
-        #if 'user' in data and SUBSCRIBE_KEYWORD == data['text']:
-        #    self.subscriberManager.append(data['user'])
+        if 'user' in data and SUBSCRIBE_KEYWORD == data['text']:
+            await self.subscriberManager.append(data['user'])
 
-    def deleteSubscriber(self, **payload):
+    async def deleteSubscriber(self, **payload):
         data = payload['data']
-        #if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
-        #    self.subscriberManager.delete(data['user'])
+        if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
+            await self.subscriberManager.delete(data['user'])
 
     async def testPost(self, **payload):
         data = payload['data']

@@ -5,7 +5,6 @@ import heapq
 import logging
 from datetime import datetime, timedelta, timezone
 
-from contestBot import ContestBot
 from settings import NOTI_STRATEGIES
 from timeStrategy import TimeStrategy
 
@@ -62,9 +61,9 @@ class Collector:
     _UPDATE_INTERVAL = 10
     _MAX_ERROR_WAIT_TIME = 60*20
 
-    def __init__(self, webClient):
+    def __init__(self, bot):
         self.lock = asyncio.Lock()
-        self.webClient = webClient
+        self.bot = bot
         self.contests = dict()
         self.notiHeap = list()
         self.attemptCount = 0
@@ -74,16 +73,16 @@ class Collector:
             self.contests, 
             self.notiHeap, 
             self.lock,
-            self.webClient)
+            self.bot)
         return putManager
     
     class PutManager:
-        def __init__(self, contests, notiHeap, lock, webClient):
+        def __init__(self, contests, notiHeap, lock, bot):
             self.putCheck = dict()
             self.contests = contests
             self.notiHeap = notiHeap
             self.lock = lock
-            self.webClient = webClient
+            self.bot = bot
 
         async def __aenter__(self):
             await self.lock.acquire()
@@ -95,10 +94,9 @@ class Collector:
         async def __aexit__(self, *args):
             for id in self.putCheck:
                 if not self.putCheck[id]:
-                    await ContestBot.postContest(
+                    await self.bot.postContest(
                         self.contests[id], 
-                        status='canceled', 
-                        webClient=self.webClient
+                        status='canceled'
                     )
             self.lock.release()
             return
@@ -115,11 +113,11 @@ class Collector:
                     return
                 self.contests[item.id] = item
                 if noticeOn:
-                    await ContestBot.postContest(item, status='modified', webClient=self.webClient)
+                    await self.bot.postContest(item, status='modified')
             else:
                 self.contests[item.id] = item
                 if noticeOn:
-                    await ContestBot.postContest(item, status='new', webClient=self.webClient)
+                    await self.bot.postContest(item, status='new')
 
             for timeStrategy in NOTI_STRATEGIES:
                 timeStrategy = timeStrategy.value
@@ -169,11 +167,11 @@ class Collector:
                         del noti.group[noti.id]
                         continue
 
-                    await ContestBot.postContest(
+                    await self.bot.postContest(
                         noti.group[noti.id], 
                         status='noti', 
-                        webClient=self.webClient,
-                        notiTimeStrategy=noti.timeStrategy)
+                        notiTimeStrategy=noti.timeStrategy
+                    )
                     heapq.heappop(self.notiHeap)
             LOGGER.debug("check end")
             await asyncio.sleep(self._CHECK_INTERVAL)

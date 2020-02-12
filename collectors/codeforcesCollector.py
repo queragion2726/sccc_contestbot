@@ -1,12 +1,11 @@
+from datetime import datetime
 import json
 import threading
 import logging
 
-from getters.collector import Collector
-from getters.collector import ContestData
-from datetime import datetime
+from collectors.collector import Collector
+from collectors.collector import ContestData
 from settings import LOCAL_TIMEZONE, POST_CHANNEL
-from time import sleep
 
 import aiohttp
 
@@ -25,8 +24,8 @@ class CodeforcesData(ContestData):
         )
 
 class CodeforcesCollector(Collector):
-    #_TARG_URL = 'http://codeforces.com/api/contest.list?gym=false&lang=en'
-    _TARG_URL = 'http://127.0.0.1/'
+    _TARG_URL = 'http://codeforces.com/api/contest.list?gym=false&lang=en'
+    #_TARG_URL = 'http://127.0.0.1/'
 
     async def getData(self, noticeOn=True):
         LOGGER.debug(CODEFORCES_PREFIX + " getData()")
@@ -54,10 +53,7 @@ class CodeforcesCollector(Collector):
                 continue
             except Exception as e:
                 LOGGER.error(e)
-                await self.webClient.chat_postMessage(
-                    channel = POST_CHANNEL,
-                    text=str(e)
-                )
+                await self.bot.postText(str(e))
                 await self.errorWait()
                 continue
 

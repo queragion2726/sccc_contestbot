@@ -5,8 +5,8 @@ import threading
 import logging
 import re
 
-from getters.collector import Collector
-from getters.collector import ContestData
+from collectors.collector import Collector
+from collectors.collector import ContestData
 from settings import LOCAL_TIMEZONE
 
 from bs4 import BeautifulSoup
