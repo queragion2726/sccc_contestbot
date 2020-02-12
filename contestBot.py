@@ -44,6 +44,8 @@ class ContestBot:
         tasks = asyncio.gather(*initUpdates)
         loop.run_until_complete(tasks)
 
+        print('Init update completed')
+
         # collectors and rtmClient start
         starts = (col.start() for col in self.collectors)
         tasks = asyncio.gather(*starts, self.rtmClient.start())
@@ -54,6 +56,8 @@ class ContestBot:
 
         signal.signal(signal.SIGINT, stopCallback)
         signal.signal(signal.SIGTERM, stopCallback)
+
+        print('Bot started')
 
         try:
             loop.run_until_complete(tasks) #run forever
@@ -68,7 +72,7 @@ class ContestBot:
                 pass
             raise
         finally:
-            loop.close()
+            loop.stop()
 
     async def postContest(self, contest, status, notiTimeStrategy=None):
         if status == 'noti' and not isinstance(notiTimeStrategy, TimeStrategy):
