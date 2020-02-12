@@ -17,7 +17,7 @@ Slack bot noticing contest informations.
 ## 요구사항
 
 - Python3.6 이상
-- requests, slackclient module
+- aiohttp, slackclient
 
 
 ## 설치 Installation
@@ -27,7 +27,7 @@ Slack bot noticing contest informations.
 Please, install required modules if you don't have
 
 ```
-$ pip3 install requests
+$ pip3 install aiohttp 
 $ pip3 install slackclient
 ```
 
