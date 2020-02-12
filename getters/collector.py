@@ -11,6 +11,8 @@ from timeStrategy import TimeStrategy
 
 from slack import WebClient
 
+LOGGER = logging.getLogger(__name__)
+
 class ContestData:
     def __init__(self, idVal, contestName, startDatetime, URL):
         self.id = idVal
@@ -35,8 +37,14 @@ class NotiData:
         self.notiTime = contest.startDatetime - timeStrategy.delta
         self.id = contest.id
 
-    def valid(self):
+    def validNotiTime(self):
         return self.notiTime > datetime.now(timezone.utc)
+
+    def valid(self):
+        if self.id not in self.group:
+            return False
+
+        return self.contest is self.group[self.id] 
 
     def __gt__(self, o):
         return self.notiTime > o.notiTime
@@ -48,15 +56,18 @@ class NotiData:
         return self.notiTime <= o.notiTime
 
 class Collector:
-    _CHECK_INTERVAL = 59
-    _UPDATE_INTERVAL = 61 # coprime with 59 :)
+    #_CHECK_INTERVAL = 59
+    _CHECK_INTERVAL = 6
+    #_UPDATE_INTERVAL = 61 # coprime with 59 :)
+    _UPDATE_INTERVAL = 10
+    _MAX_ERROR_WAIT_TIME = 60*20
 
-    def __init__(self, token):
+    def __init__(self, webClient):
         self.lock = asyncio.Lock()
-        self.webClient = WebClient(token=token, run_async=True)
+        self.webClient = webClient
         self.contests = dict()
         self.notiHeap = list()
-        self.eventLoop = None
+        self.attemptCount = 0
 
     def openPutManager(self):
         putManager = self.PutManager(
@@ -89,6 +100,7 @@ class Collector:
                         status='canceled', 
                         webClient=self.webClient
                     )
+            self.lock.release()
             return
 
         async def put(self, item, noticeOn = True):
@@ -113,7 +125,7 @@ class Collector:
                 timeStrategy = timeStrategy.value
                 noti = NotiData(item, self.contests, timeStrategy)
 
-                if noti.valid():
+                if noti.validNotiTime():
                     heapq.heappush(self.notiHeap, noti)
                     logging.debug('noti put ' + str(noti.notiTime) +
                                    ' ' + noti.contest.contestName)
@@ -130,27 +142,54 @@ class Collector:
             return
 
         while True:
-            try:
-                async with self.openPutManager() as putter:
-                    for data in await self.getData():
-                        await putter.put(data, noticeOn)
-                await asyncio.sleep(self._UPDATE_INTERVAL)
-            except asyncio.CancelledError:
-                break
+            async with self.openPutManager() as putter:
+                for data in await self.getData():
+                    await putter.put(data, noticeOn)
+            await asyncio.sleep(self._UPDATE_INTERVAL)
 
     async def popCheck(self):
         while True:
-            try:
-                async with self.lock:
-                    pass
-                await asyncio.sleep(self._CHECK_INTERVAL)
-            except asyncio.CancelledError:
-                break
+            LOGGER.debug("pop check")
+            async with self.lock:
+                while len(self.notiHeap) > 0:
+                    noti = self.notiHeap[0]
+                    LOGGER.debug(
+                        'noti cur : ' + str(noti.notiTime) 
+                        + ' ' + noti.contest.contestName)
+
+                    if not noti.valid():
+                        heapq.heappop(self.notiHeap)
+                        continue
+                    
+                    if noti.validNotiTime():
+                        break
+
+                    if noti.timeStrategy == NOTI_STRATEGIES.END.value:
+                        heapq.heappop(self.notiHeap)
+                        del noti.group[noti.id]
+                        continue
+
+                    await ContestBot.postContest(
+                        noti.group[noti.id], 
+                        status='noti', 
+                        webClient=self.webClient,
+                        notiTimeStrategy=noti.timeStrategy)
+                    heapq.heappop(self.notiHeap)
+            LOGGER.debug("check end")
+            await asyncio.sleep(self._CHECK_INTERVAL)
 
     async def start(self):
-        await asyncio.gather(
+        try:
+            await asyncio.gather(
                     self.update(),
                     self.popCheck()
                 )
+        except asyncio.CancelledError:
+            return
+
+    async def errorWait(self):
+        waitTime = min(2**self.attemptCount, self._MAX_ERROR_WAIT_TIME)
+        await asyncio.sleep(waitTime)
+
 
 

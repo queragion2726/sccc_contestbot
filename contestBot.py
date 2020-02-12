@@ -1,6 +1,7 @@
 import threading
 import logging
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 
 from timeStrategy import TimeStrategy
 from settings import POST_CHANNEL
@@ -16,9 +17,11 @@ LOGGER = logging.getLogger(__name__)
 
 class ContestBot:
     def __init__(self, token):
-        self.rtmClient = slack.RTMClient(token=token, run_async=True)
-        self.token = token
-
+        self.eventLoop = asyncio.get_event_loop()
+        self.rtmClient = slack.RTMClient(token=token, run_async=True,
+                                         loop=self.eventLoop)
+        self.webClient = slack.WebClient(token=token, run_async=True,
+                                         loop=self.eventLoop)
         self.collectors = []
 
         slack.RTMClient.run_on(event='message')(self.postSubscriber)
@@ -29,17 +32,19 @@ class ContestBot:
         LOGGER.debug('Bot init')
 
     def addCollector(self, collectorType):
-        self.collectors.append(collectorType(self.token))
+        self.collectors.append(collectorType(self.webClient))
 
     def start(self, initNotice=True):
-        loop = asyncio.get_event_loop()
+        loop = self.eventLoop
 
+        # init update for collectors
         initUpdates = (col.update(repeat=False, noticeOn=initNotice) for col in self.collectors)
         tasks = asyncio.gather(*initUpdates)
         loop.run_until_complete(tasks)
 
-        endlessUpdates = (col.update(repeat=True) for col in self.collectors)
-        tasks = asyncio.gather(*endlessUpdates, self.rtmClient.start())
+        # collectors and rtmClient start
+        starts = (col.start() for col in self.collectors)
+        tasks = asyncio.gather(*starts, self.rtmClient.start())
 
         import signal
         def stopCallback(signum, frame):
@@ -59,8 +64,9 @@ class ContestBot:
                 tasks.cancel()
             except asyncio.CancelledError:
                 pass
+            raise
         finally:
-            loop.stop()
+            loop.close()
 
     @staticmethod
     async def postContest(contest, status, webClient, notiTimeStrategy=None):
