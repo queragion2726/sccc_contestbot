@@ -85,15 +85,16 @@ class Collector:
         async def __aenter__(self):
             await self.lock.acquire()
             self.putCheck.clear()
-            for id in self.contests:
-                self.putCheck[id] = False
+            for idVal in self.contests:
+                self.putCheck[idVal] = False
             return self
 
         async def __aexit__(self, *args):
-            for id in self.putCheck:
-                if not self.putCheck[id]:
+            for idVal in self.putCheck:
+                if not self.putCheck[idVal]:
+                    del self.contests[idVal];
                     await self.bot.postContest(
-                        self.contests[id], 
+                        self.contests[idVal], 
                         status='canceled'
                     )
             self.lock.release()
