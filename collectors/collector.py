@@ -92,11 +92,11 @@ class Collector:
         async def __aexit__(self, *args):
             for idVal in self.putCheck:
                 if not self.putCheck[idVal]:
-                    del self.contests[idVal];
                     await self.bot.postContest(
                         self.contests[idVal], 
                         status='canceled'
                     )
+                    del self.contests[idVal]
             self.lock.release()
             return
 
