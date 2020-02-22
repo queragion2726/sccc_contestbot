@@ -103,7 +103,6 @@ class ContestBot:
             txt = CANCELED_NOTICE_TXT % format_dict
             msg = CANCELED_NOTICE_MESSAGE % format_dict
 
-        LOGGER.debug(msg)
         await self.webClient.chat_postMessage(
                 channel = POST_CHANNEL,
                 text = txt,
