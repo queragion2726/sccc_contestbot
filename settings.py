@@ -4,7 +4,7 @@ from enum import Enum
 import os
 import logging
 
-logging.basicConfig(filename='log.log', format='%(asctime)s %(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='log.log', format='%(asctime)s %(name)s : %(message)s', level=logging.DEBUG)
 
 LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
 POST_CHANNEL = '#dev-playground'
