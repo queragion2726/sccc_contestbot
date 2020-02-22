@@ -1,5 +1,4 @@
-from datetime import datetime
-from time import sleep
+from datetime import datetime, timezone
 import json
 import threading
 import logging
@@ -17,13 +16,12 @@ LOGGER = logging.getLogger(__name__)
 BOJ_PREFIX = 'BOJ'
 
 class BaekjoonData(ContestData):
-    __RE_REPR = re.compile(r'\d+')
 
     def __init__(self, idVal, name, startTime):
         super().__init__(
             idVal,
             name,
-            datetime(*map(int, self.__RE_REPR.findall(startTime)), tzinfo=LOCAL_TIMEZONE),
+            startTime,
             f'https://www.acmicpc.net/contest/view/{str(idVal)}'
         )
         
@@ -31,6 +29,7 @@ class BaekjoonData(ContestData):
 class BaekjoonCollector(Collector):
     _TARG_URL = 'https://www.acmicpc.net/contest/official/list'
     _UPDATE_INTERVAL = 60*60 # 1 hour
+    __RE_REPR = re.compile(r'\d+')
 
     async def getData(self, noticeOn=True):
         ret = []
@@ -49,6 +48,10 @@ class BaekjoonCollector(Collector):
                             idVal = contents[1].a.attrs['href'].split('/')[-1]
                             name = contents[1].a.text
                             startTime = contents[7].text
+                            startTime = datetime(*map(int, self.__RE_REPR.findall(startTime)), tzinfo=LOCAL_TIMEZONE)
+
+                            if startTime < datetime.now(timezone.utc):
+                                break
 
                             data = BaekjoonData(idVal, name, startTime)
 
