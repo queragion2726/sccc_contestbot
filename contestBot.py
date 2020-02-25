@@ -124,13 +124,18 @@ class ContestBot:
             thread_ts = data['ts']
 
             subscribe_list = await self.subscriberManager.get()
-            text = ' '.join(f'<@{user}>' for user in subscribe_list)
-            if text == '':
+            subText = ' '.join(f'<@{user}>' for user in subscribe_list)
+            if subText == '':
                 return
+
+            displayNotiText = data['blocks'][0]['text']['text']
 
             await webClient.chat_postMessage(
                     channel = channel_id,
-                    text = text,
+                    text = displayNotiText,
+                    blocks = [{"type": "context", "elements": [{"type": "mrkdwn", 
+                        "text": subText
+                    }]}],
                     thread_ts = thread_ts
                 )
 
