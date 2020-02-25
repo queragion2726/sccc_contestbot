@@ -91,6 +91,8 @@ class Collector:
 
         async def __aexit__(self, *args):
             for idVal in self.putCheck:
+                if idVal not in self.contests:
+                    continue
                 if not self.putCheck[idVal]:
                     await self.bot.postContest(
                         self.contests[idVal], 
