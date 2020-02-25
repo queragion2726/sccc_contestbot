@@ -11,6 +11,7 @@ from settings import MODIFIED_NOTICE_TXT, MODIFIED_NOTICE_MESSAGE
 from settings import NOTI_NOTICE_TXT, NOTI_NOTICE_MESSAGE
 from settings import CANCELED_NOTICE_TXT, CANCELED_NOTICE_MESSAGE
 from settings import SUBSCRIBE_KEYWORD, UNSUBSCRIBE_KEYWORD
+from settings import HELP_KEYWORD, HELP_DISPLAY_TXT, HELP_MESSAGE
 
 import slack
 
@@ -29,6 +30,7 @@ class ContestBot:
         slack.RTMClient.run_on(event='message')(self.postSubscriber)
         slack.RTMClient.run_on(event='message')(self.appendSubscriber)
         slack.RTMClient.run_on(event='message')(self.deleteSubscriber)
+        slack.RTMClient.run_on(event='message')(self.postHelpMessage)
         slack.RTMClient.run_on(event='message')(self.testPost)
 
         LOGGER.debug('Bot init')
@@ -148,6 +150,21 @@ class ContestBot:
         data = payload['data']
         if 'user' in data and UNSUBSCRIBE_KEYWORD == data['text']:
             await self.subscriberManager.delete(data['user'])
+    
+    async def postHelpMessage(self, **payload):
+        data = payload['data']
+        if 'user' in data and HELP_KEYWORD == data['text']:
+            await self.webClient.chat_postMessage(
+                channel = POST_CHANNEL,
+                text = HELP_DISPLAY_TXT,
+                blocks = [{ "type" : "section",
+                            "text" : {
+                                "type" : "mrkdwn",
+                                "text" : HELP_MESSAGE
+                            }
+                         }],
+                mrkdwn = True
+            )
 
     async def testPost(self, **payload):
         data = payload['data']

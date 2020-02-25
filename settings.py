@@ -147,3 +147,13 @@ NO_SUCH_USER = '구독 목록에 존재하지 않습니다.'
 ALREADY_EXISTS = '이미 목록에 추가된 유저입니다.'
 APPEND_SUCCESS = '구독에 추가해 드렸습니다.'
 DELETE_SUCCESS = '구독에서 제거해 드렸습니다.'
+
+HELP_KEYWORD = '!도움말'
+HELP_DISPLAY_TXT = "봇 도움말"
+HELP_MESSAGE = f'''
+*대회 알리미 슬랙 봇* : <https://github.com/queragion2726/sccc_contestbot|깃헙 링크>
+구독하려면 채팅창에 "{SUBSCRIBE_KEYWORD}" 를 입력하세요.
+반대로 구독해제는 "{UNSUBSCRIBE_KEYWORD}" 를 입력하세요.
+
+구독시 대회 알림마다 태그 알림을 받을 수 있습니다.
+'''
