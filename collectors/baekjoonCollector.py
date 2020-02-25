@@ -32,6 +32,7 @@ class BaekjoonCollector(Collector):
     __RE_REPR = re.compile(r'\d+')
 
     async def getData(self, noticeOn=True):
+        LOGGER.debug(BOJ_PREFIX + " getData()")
         ret = []
         self.attemptCount = 0
         while True:
