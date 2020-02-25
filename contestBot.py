@@ -121,6 +121,8 @@ class ContestBot:
         data = payload['data']
         if 'subtype' in data and data['subtype'] == 'bot_message' \
                             and 'thread_ts' not in data and 'blocks' in data:
+            if data['text'] == HELP_DISPLAY_TXT:
+                return
             webClient = payload['web_client']
             channel_id = data['channel']
             thread_ts = data['ts']
