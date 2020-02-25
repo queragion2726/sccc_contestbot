@@ -111,6 +111,7 @@ class Collector:
 
             if item.id in self.contests:
                 if item == self.contests[item.id]:
+                    self.contests[item.id].contestName = item.contestName # Update contestName
                     return
                 self.contests[item.id] = item
                 if noticeOn:
