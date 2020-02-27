@@ -134,20 +134,19 @@ class Collector:
         raise NotImplementedError
 
     async def update(self, repeat=True, noticeOn=True):
-        async with self.openPutManager() as putter:
-            for data in await self.getData():
-                await putter.put(data, noticeOn)
-        
-        if not repeat:
-            return
-
         while True:
+            datas = await self.getData()
+            await self.popCheck(repeat=False)
+
             async with self.openPutManager() as putter:
-                for data in await self.getData():
+                for data in datas:
                     await putter.put(data, noticeOn)
+
+            if not repeat:
+                break
             await asyncio.sleep(self._UPDATE_INTERVAL)
 
-    async def popCheck(self):
+    async def popCheck(self, repeat=True):
         while True:
             LOGGER.debug("pop check")
             async with self.lock:
@@ -176,6 +175,9 @@ class Collector:
                     )
                     heapq.heappop(self.notiHeap)
             LOGGER.debug("check end")
+
+            if not repeat:
+                break
             await asyncio.sleep(self._CHECK_INTERVAL)
 
     async def start(self):
