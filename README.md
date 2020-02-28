@@ -9,10 +9,11 @@
 
 Slack bot noticing contest informations.
 
+![Capture](img/Capture.jpg?raw=true)
 
 ## 요구사항
 
-- Python3.6 이상
+- Python3.6 or upper
 - aiohttp, slackclient
 
 
