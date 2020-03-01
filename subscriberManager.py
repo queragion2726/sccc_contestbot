@@ -23,6 +23,14 @@ class SubscriberManager:
         async with self.lock:
             ret = iter(self.lists)
         return ret
+
+    def appendEndlines(self, it):
+        while True:
+            try:
+                yield next(it)
+                yield '\n'
+            except StopIteration:
+                raise
     
     async def delete(self, user):
         async with self.lock:
@@ -34,7 +42,9 @@ class SubscriberManager:
                 return
             
             with open(self.__FILE_NAME, 'w') as file:
-                file.writelines(iter(self.lists))
+                file.writelines(
+                    self.appendEndlines(iter(self.lists))
+                )
         await self.bot.postText(DELETE_SUCCESS)
         LOGGER.debug(user + 'deleted')
     
