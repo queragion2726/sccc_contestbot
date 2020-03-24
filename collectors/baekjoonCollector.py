@@ -38,7 +38,7 @@ class BaekjoonCollector(Collector):
         while True:
             self.attemptCount += 1
             try:
-                async with aiohttp.ClientSession() as session:
+                async with aiohttp.ClientSession(raise_for_status=True) as session:
                     async with session.get(self._TARG_URL) as resp:
                         req = await resp.text()
                         soup = BeautifulSoup(req, features='html.parser')
