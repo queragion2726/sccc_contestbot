@@ -14,26 +14,20 @@ Slack bot noticing contest informations.
 ## 요구사항
 
 - Python3.6 or upper
-- aiohttp, slackclient
+- pipenv
 
 
 ## 설치 Installation
 
-필요한 모듈이 없다면, 설치해주세요.
-
-Please, install required modules if you don't have
-
-```sh
-pip3 install aiohttp 
-pip3 install slackclient
-```
-
-## 사용법 Usage
-
 ```sh
 git clone https://github.com/queragion2726/sccc_contestbot.git
 cd sccc_contestbot
+pipenv install
 ```
+
+
+## 사용법 Usage
+
 
 ```sh
 vim settings.py
@@ -48,6 +42,10 @@ You can change several options about bots (channel to post, message format, etc.
 Please, check on the file.
 
 ## 실행 Run
+
+```sh
+pipenv shell
+```
 
 ```sh
 # SLACK_API_TOKEN='xoxb-xxxx....'
