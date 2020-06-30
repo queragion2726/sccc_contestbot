@@ -14,6 +14,8 @@ def parse_settings() -> dict:
     try:
         ret["BOT_DB_NAME"] = os.environ["BOT_DB_NAME"]
         ret["BOT_DB_USERNAME"] = os.environ["BOT_DB_USERNAME"]
+        ret["BOT_DB_HOST"] = os.environ["BOT_DB_HOST"]
+        ret["BOT_DB_PORT"] = os.environ["BOT_DB_PORT"]
     except KeyError as e:
         raise RuntimeError(f"환경변수 {str(e)}가 존재하지 않습니다.")
 
@@ -23,7 +25,7 @@ def parse_settings() -> dict:
         if ret["BOT_DB_PASSWORD"] is None:
             filename = os.environ["BOT_DB_PASSWORD_FILE"]
             with open(filename, "r") as password_file:
-                ret["BOT_DB_PASSWORD"] = password_file.readline()
+                ret["BOT_DB_PASSWORD"] = password_file.readline().strip()
     except KeyError as e:
         raise RuntimeError("DB 비밀번호와 관련된 환경변수가 존재하지 않습니다.")
     except FileNotFoundError as e:
@@ -34,7 +36,7 @@ def parse_settings() -> dict:
         if ret["BOT_SLACK_TOKEN"] is None:
             filename = os.environ["BOT_DB_PASSWORD_FILE"]
             with open(filename, "r") as password_file:
-                ret["BOT_DB_PASSWORD"] = password_file.readline()
+                ret["BOT_SLACK_TOKEN"] = password_file.readline().strip()
     except KeyError as e:
         raise RuntimeError("슬랙 토큰과 관련된 환경변수가 존재하지 않습니다.")
     except FileNotFoundError as e:
