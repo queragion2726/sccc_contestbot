@@ -20,9 +20,12 @@ services:
             - db_password
         environment: 
             - BOT_DB_NAME=contestbot
+            - BOT_DB_HOST=db
+            - BOT_DB_PORT=5432
             - BOT_DB_USERNAME=contestbot
             - BOT_DB_PASSWORD_FILE=/run/secrets/db_password
             - BOT_SLACK_TOKEN_FILE=/run/secrets/slack_token
+            - PYTHONUNBUFFERED=0
         volumes:
             - ./:/app/
         secrets:
