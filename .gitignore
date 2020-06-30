@@ -3,4 +3,4 @@ __pycache__/
 .venv
 log.log
 
-db_password.txt
+secrets/

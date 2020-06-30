@@ -22,15 +22,19 @@ services:
             - BOT_DB_NAME=contestbot
             - BOT_DB_USERNAME=contestbot
             - BOT_DB_PASSWORD_FILE=/run/secrets/db_password
+            - BOT_SLACK_TOKEN_FILE=/run/secrets/slack_token
         volumes:
             - ./:/app/
         secrets:
             - db_password
+            - slack_token
         command: python app.py
 
 secrets:
     db_password:
-        file: db_password.txt
+        file: ./secrets/db_password.txt
+    slack_token:
+        file: ./secrets/slack_token.txt
 
 volumes:
     db_data:
