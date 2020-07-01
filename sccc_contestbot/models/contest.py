@@ -6,7 +6,8 @@ from . import Base
 class Contest(Base):
     __tablename__ = "contests"
 
-    id = Column(String(64), primary_key=True)
+    id = Column(Integer, primary_key=True)
+    contest_id = Column(String(32), unique=True)
     contest_name = Column(String(128))
     start_date = Column(DateTime)
     URL = Column(String(512))
