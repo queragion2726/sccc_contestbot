@@ -58,7 +58,7 @@ class ContestBot:
 
         # DB 엔진 초기화
         self.engine = sqlalchemy.create_engine(
-            "postgres://{}:{}@{}:{}/{}".format(
+            "postgresql://{}:{}@{}:{}/{}".format(
                 kwargs["BOT_DB_USERNAME"],
                 kwargs["BOT_DB_PASSWORD"],
                 kwargs["BOT_DB_HOST"],
