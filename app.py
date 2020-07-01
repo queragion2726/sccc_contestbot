@@ -34,7 +34,7 @@ def parse_settings() -> dict:
     ret["BOT_SLACK_TOKEN"] = os.environ.get("BOT_SLACK_TOKEN")
     try:
         if ret["BOT_SLACK_TOKEN"] is None:
-            filename = os.environ["BOT_DB_PASSWORD_FILE"]
+            filename = os.environ["BOT_DB_SLACK_FILE"]
             with open(filename, "r") as password_file:
                 ret["BOT_SLACK_TOKEN"] = password_file.readline().strip()
     except KeyError as e:
