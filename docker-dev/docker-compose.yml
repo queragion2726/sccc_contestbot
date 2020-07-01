@@ -15,7 +15,7 @@ services:
     contestbot:
         build:
             context: .
-            dockerfile: ./Dockerfile-dev
+            dockerfile: ./docker-dev/Dockerfile
         secrets:
             - db_password
         environment: 
@@ -27,17 +27,17 @@ services:
             - BOT_SLACK_TOKEN_FILE=/run/secrets/slack_token
             - PYTHONUNBUFFERED=0
         volumes:
-            - ./:/app/
+            - ../:/app/
         secrets:
             - db_password
             - slack_token
-        command: python app.py
+        command: pytest -v
 
 secrets:
     db_password:
-        file: ./secrets/db_password.txt
+        file: ../secrets/db_password.txt
     slack_token:
-        file: ./secrets/slack_token.txt
+        file: ../secrets/slack_token.txt
 
 volumes:
     db_data:

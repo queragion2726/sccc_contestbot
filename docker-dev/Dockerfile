@@ -7,5 +7,5 @@ RUN pip install psycopg2-binary
 RUN pip install poetry
 
 COPY pyproject.toml poetry.lock ./
-RUN poetry export -f requirements.txt | pip install -r /dev/stdin
+RUN poetry export --dev -f requirements.txt | pip install -r /dev/stdin
 
