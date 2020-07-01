@@ -34,13 +34,13 @@ def parse_settings() -> dict:
     ret["BOT_SLACK_TOKEN"] = os.environ.get("BOT_SLACK_TOKEN")
     try:
         if ret["BOT_SLACK_TOKEN"] is None:
-            filename = os.environ["BOT_DB_SLACK_FILE"]
+            filename = os.environ["BOT_SLACK_TOKEN_FILE"]
             with open(filename, "r") as password_file:
                 ret["BOT_SLACK_TOKEN"] = password_file.readline().strip()
     except KeyError as e:
         raise RuntimeError("슬랙 토큰과 관련된 환경변수가 존재하지 않습니다.")
     except FileNotFoundError as e:
-        raise RuntimeError("슬랙토큰에 해당하는 파일을 찾을 수가 없습니다.")
+        raise RuntimeError("슬랙 토큰에 해당하는 파일을 찾을 수가 없습니다.")
 
     return ret
 
