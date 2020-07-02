@@ -1,12 +1,17 @@
 import asyncio
 import logging
+import threading
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import slack
 import sqlalchemy
+from sqlalchemy.orm import sessionmaker, scoped_session
 
+import settings
 from .models import Base
+from .sub_manager import SubManager
 
 
 def init_logger(mod_name):
@@ -40,6 +45,9 @@ class ContestBot:
             BOT_DB_NAME :
             BOT_DB_USERNAME :
             BOT_DB_PASSWORD : 
+            DB_ENGINE : sqlalchemy 엔진을 직접 생성한 경우,
+                인자로 넘겨 줄 수 있습니다. 주로 테스트를 위해
+                사용합니다.
         """
         # TODO: 파라미터 설명 보충
         logger.info("------콘테스트 봇 초기화------")
@@ -57,19 +65,27 @@ class ContestBot:
         logger.info("슬랙 클라이언트 초기화 완료")
 
         # DB 엔진 초기화
-        self.engine = sqlalchemy.create_engine(
-            "postgresql://{}:{}@{}:{}/{}".format(
-                kwargs["BOT_DB_USERNAME"],
-                kwargs["BOT_DB_PASSWORD"],
-                kwargs["BOT_DB_HOST"],
-                kwargs["BOT_DB_PORT"],
-                kwargs["BOT_DB_NAME"],
+        if "DB_ENGINE" in kwargs:
+            self.engine = kwargs["DB_ENGINE"]
+        else:
+            self.engine = sqlalchemy.create_engine(
+                "postgresql://{}:{}@{}:{}/{}".format(
+                    kwargs["BOT_DB_USERNAME"],
+                    kwargs["BOT_DB_PASSWORD"],
+                    kwargs["BOT_DB_HOST"],
+                    kwargs["BOT_DB_PORT"],
+                    kwargs["BOT_DB_NAME"],
+                )
             )
-        )
         if not self.test_db(self.engine):
             Base.metadata.create_all(self.engine)
             logger.info("테이블 생성을 완료했습니다.")
         logger.info("DB 엔진 생성 완료")
+
+        # 구독자 관리자 생성
+        self.thread_local_data = threading.local()
+
+        # self.sub_manager = SubManager(self.event_loop, self.thread_local_data)
 
         # TODO: 파서 추가
 
@@ -109,4 +125,24 @@ class ContestBot:
         """
         봇을 실행합니다.
         """
+        loop = self.event_loop
+
+        rtm_client_future = self.rtm_client.start()
+
+        # 스레드 별 DB 세션 생성을 위한 초기화
+
+        def thread_session_maker(thread_local_data, engine):
+            thread_local_data.Session = scoped_session(sessionmaker(bind=engine))
+
+        try:
+            # 각 스레드는 스레드만의 scoped_session을 가지게 된다.
+            with ThreadPoolExecutor(
+                initializer=thread_session_maker,
+                initargs=(self.thread_local_data, self.engine,),
+            ) as pool:
+                loop.set_default_executor(pool)
+
+                loop.run_until_complete(rtm_client_future)
+        finally:
+            loop.close()
 
