@@ -31,7 +31,7 @@ services:
         secrets:
             - db_password
             - slack_token
-        command: pytest -v
+        command: bash -c "pytest -v && python app.py"
 
 secrets:
     db_password:
