@@ -82,10 +82,23 @@ class ContestBot:
             logger.info("테이블 생성을 완료했습니다.")
         logger.info("DB 엔진 생성 완료")
 
-        # 구독자 관리자 생성
+        # DB API 처리를 위한 Bot만의 ThreadPoolExecutor 생성
+
+        # 스레드 별 DB 세션 생성을 위한 initializer
+        # 각 스레드는 스레드만의 scoped_session을 가지게 된다.
         self.thread_local_data = threading.local()
 
-        # self.sub_manager = SubManager(self.event_loop, self.thread_local_data)
+        def thread_session_maker(thread_local_data, engine):
+            thread_local_data.Session = scoped_session(sessionmaker(bind=engine))
+
+        self.thread_pool_executor = ThreadPoolExecutor(
+            initializer=thread_session_maker,
+            initargs=(self.thread_local_data, self.engine),
+        )
+
+        # 구독자 관리자 생성
+
+        self.sub_manager = SubManager(self.event_loop, self.thread_local_data)
 
         # TODO: 파서 추가
 
@@ -129,19 +142,10 @@ class ContestBot:
 
         rtm_client_future = self.rtm_client.start()
 
-        # 스레드 별 DB 세션 생성을 위한 초기화
-
-        def thread_session_maker(thread_local_data, engine):
-            thread_local_data.Session = scoped_session(sessionmaker(bind=engine))
-
         try:
-            # 각 스레드는 스레드만의 scoped_session을 가지게 된다.
-            with ThreadPoolExecutor(
-                initializer=thread_session_maker,
-                initargs=(self.thread_local_data, self.engine,),
-            ) as pool:
+            with self.thread_pool_executor as pool:
+                # 루프의 기본 실행자를 pool로 설정합니다
                 loop.set_default_executor(pool)
-
                 loop.run_until_complete(rtm_client_future)
         finally:
             loop.close()
