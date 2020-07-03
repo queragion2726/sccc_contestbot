@@ -1,5 +1,6 @@
 import os
 
+import sqlalchemy
 import pytest
 
 from sccc_contestbot import ContestBot
@@ -14,6 +15,7 @@ def bot():
     from app import parse_settings
 
     settings = parse_settings()
+    settings["DB_ENGINE"] = sqlalchemy.create_engine("sqlite://")
     bot = ContestBot(**settings)
 
     return bot
