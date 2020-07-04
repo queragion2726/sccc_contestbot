@@ -4,6 +4,14 @@ import functools
 from sccc_contestbot.models import Subscriber
 
 
+class AleadyExistsEception(Exception):
+    pass
+
+
+class NoSuchUserException(Exception):
+    pass
+
+
 class SubManager:
     """
     구독자를 관리합니다.
@@ -23,9 +31,8 @@ class SubManager:
         - loop.set_default_executor(pool)
             이벤트 루프의 기본 executor가 활성화된 상태의 
             ThreadPoolExecutor 이어야 합니다.
-
-    주의:
-        event_loop에 설정된 기본 ThreadPoolExecutor를 기반으로 작동합니다.
+            loop.run_in_executor(executor=None ... )은
+            디폴트 executor을 실행시킨다는걸 주의하세요!
     """
 
     def __init__(self, event_loop, thread_local_data):
@@ -33,10 +40,64 @@ class SubManager:
         self.thread_local_data = thread_local_data
 
     async def add_subscriber(self, token):
-        pass
+        """
+        토큰에 해당하는 유저를 구독자로 추가합니다.
+
+        raises:
+            AlreadyExistsException :
+                이미 구독자 목록에 존재하는 유저를 추가할 경우
+                이 예외를 발생시킵니다.
+        """
+
+        def _impl(thread_local_data):
+            session = thread_local_data.Session()
+            query = session.query(Subscriber).filter(Subscriber.token == token)
+
+            if query.first() is not None:
+                # 쿼리 결과가 존재한다면,
+                session.close()
+                raise AleadyExistsEception()
+            else:
+                session.add(Subscriber(token=token))
+                session.commit()
+            session.close()
+
+        _impl = functools.partial(_impl, self.thread_local_data)
+
+        try:
+            await self.event_loop.run_in_executor(executor=None, func=_impl)
+        except:
+            raise
 
     async def delete_subscriber(self, token):
-        pass
+        """
+        토큰에 해당하는 구독자를 삭제합니다.
+
+        raises:
+            NoSuchUserException : 지우려고하는 유저가
+                구독 목록에 존재하지 않을경우 발생합니다.
+        """
+
+        def _impl(thread_local_data):
+            session = thread_local_data.Session()
+            query = session.query(Subscriber).filter(Subscriber.token == token)
+
+            if query.first() is not None:
+                # 쿼리 결과가 존재한다면,
+                query.delete()
+                session.commit()
+            else:
+                session.close()
+                raise NoSuchUserException()
+
+            session.close()
+
+        _impl = functools.partial(_impl, self.thread_local_data)
+
+        try:
+            await self.event_loop.run_in_executor(executor=None, func=_impl)
+        except:
+            raise
 
     async def get_subscriber(self):
         """
