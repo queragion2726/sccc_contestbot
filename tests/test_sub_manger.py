@@ -1,5 +1,4 @@
 import asyncio
-from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest
@@ -7,26 +6,7 @@ import sqlalchemy
 
 from sccc_contestbot.models import Subscriber
 from sccc_contestbot.sub_manager import AleadyExistsEception, NoSuchUserException
-
-
-@contextmanager
-def temp_db_data(db_session, datas):
-    """
-    db_session에 해당하는 데이터를 넣습니다.
-    이 데이터들은 context가 종료시 사라집니다.
-    """
-    for data in datas:
-        db_session.add(data)
-    db_session.commit()
-
-    yield db_session
-
-    for data in datas:
-        try:
-            db_session.delete(data)
-            db_session.commit()
-        except:
-            pass
+from .conftest import temp_db_data
 
 
 def test_get_subscriber(sub_manager, event_loop, db_session):

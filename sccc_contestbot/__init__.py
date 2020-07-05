@@ -10,8 +10,9 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 import settings
-from .models import Base
+from .models import Base, Contest, Subscriber
 from .sub_manager import SubManager
+from .contest_manager import ContestManager, RenewalFlag
 
 
 def init_logger(mod_name):
@@ -100,6 +101,12 @@ class ContestBot:
 
         self.sub_manager = SubManager(self.event_loop, self.thread_local_data)
 
+        # 콘테스트 관리자 생성
+
+        self.contest_manager = ContestManager(
+            self.event_loop, self.thread_local_data, self.renewal_call_back
+        )
+
         # TODO: 파서 추가
 
     def test_db(self, engine, connect_try_count=5) -> bool:
@@ -150,3 +157,5 @@ class ContestBot:
         finally:
             loop.close()
 
+    def renewal_call_back(self, contest: Contest, flag: RenewalFlag):
+        pass

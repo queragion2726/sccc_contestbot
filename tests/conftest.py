@@ -1,9 +1,9 @@
 import os
+from contextlib import contextmanager
 
 import pytest
 import sqlalchemy
 from sqlalchemy.orm import scoped_session, sessionmaker
-
 
 from sccc_contestbot import ContestBot
 from sccc_contestbot.models import Subscriber, Contest
@@ -50,10 +50,44 @@ def db_session(bot):
 
 
 @pytest.fixture
+def db_session_maker(bot):
+    """
+    데이터 베이스 세션을 직접 관리하고 싶을 때
+    직접 불러와 사용할 수 있습니다.
+    """
+    return scoped_session(sessionmaker(bind=bot.engine))
+
+
+@pytest.fixture
 def sub_manager(bot):
     return bot.sub_manager
 
 
 @pytest.fixture
+def contest_manager(bot):
+    return bot.contest_manager
+
+
+@pytest.fixture
 def event_loop(bot):
     return bot.event_loop
+
+
+@contextmanager
+def temp_db_data(db_session, datas):
+    """
+    db_session에 해당하는 데이터를 넣습니다.
+    이 데이터들은 context가 종료시 사라집니다.
+    """
+    for data in datas:
+        db_session.add(data)
+    db_session.commit()
+
+    yield db_session
+
+    for data in datas:
+        try:
+            db_session.delete(data)
+            db_session.commit()
+        except:
+            pass
