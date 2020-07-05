@@ -1,7 +1,7 @@
 import functools
 from enum import Enum
 
-from sccc_contestbot.models import Contest
+from sccc_contestbot.models import Contest, ContestData
 
 
 class RenewalFlag(Enum):
@@ -44,7 +44,7 @@ class ContestManager:
         self.thread_local_data = thread_local_data
         self.renewal_call_back = renewal_call_back
 
-    async def renewal_contest(self, contest: Contest):
+    async def renewal_contest(self, contest: ContestData):
         """
         데이터베이스에 컨테스트를 추가하거나 갱신합니다.
         만약 동일한 컨테스트가 이미 존재할경우, 아무것도 하지 않습니다.
@@ -62,7 +62,7 @@ class ContestManager:
             )
 
             if item is None:
-                session.add(contest)
+                session.add(Contest(contest))
                 session.commit()
                 session.close()
                 return RenewalFlag.CREATED
@@ -89,7 +89,7 @@ class ContestManager:
         else:
             self.renewal_call_back(contest, result_flag)
 
-    async def delete_contest(self, contest: Contest):
+    async def delete_contest(self, contest: ContestData):
         """
         해당하는 콘테스트가 존재한다면 제거합니다.
         콘테스트가 존재하지 않아도 예외를 발생시키지는 않습니다.
@@ -110,7 +110,7 @@ class ContestManager:
 
         await self.event_loop.run_in_executor(executor=None, func=_impl)
 
-    async def is_latest(self, contest: Contest) -> bool:
+    async def is_latest(self, contest: ContestData) -> bool:
         """
         이 콘테스트 객체가, 최신정보인지 확인합니다.
 
