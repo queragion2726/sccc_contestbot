@@ -56,5 +56,4 @@ class CFCollector(Collector):
                 logger.error("CF : 알수없는 에러", exc_info=e)
                 await self.error_wait(attempt_count)
                 continue
-
-        return ret
+        self.update_call_back(ret)
