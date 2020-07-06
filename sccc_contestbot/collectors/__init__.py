@@ -8,7 +8,7 @@ class Collector:
     크롤링이 완료될 때마다, update_call_back을 호출합니다.
     update_call_back은 다음과 같은 형태를 가져야 합니다.
 
-    def call_back(contests: Iterable):
+    def call_back(contests: List[ContestData]):
         pass
 
     Args:
