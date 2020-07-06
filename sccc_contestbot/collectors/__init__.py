@@ -1,3 +1,6 @@
+import asyncio
+
+
 class Collector:
     """
     크롤링 클래스입니다.
@@ -14,6 +17,7 @@ class Collector:
     """
 
     _UPDATE_INTERVAL = 60 * 5  # 5분 간격으로 확인 예약
+    _MAX_ERROR_WAIT_TIME = 60 * 10
 
     def __init__(self, event_loop, update_call_back):
         self.event_loop = event_loop
@@ -38,14 +42,29 @@ class Collector:
         if self.stopped:
             return
 
-        self.event_loop.create_task(self.collect())
-        self.event_loop.call_later(self._UPDATE_INTERVAL, self.run)
+        self.event_loop.create_task(self._collect_task())
+
+    async def _collect_task(self):
+        """
+        _impl_run에 의해 예약되며
+        크롤링 한 후, _impl_run을 다시 이벤트 루프에 예약합니다.
+        """
+        await self.collect()
+        self.event_loop.call_later(self._UPDATE_INTERVAL, self._impl_run)
 
     def stop(self):
         """
         컬렉터의 가동을 멈춥니다.
         """
         self.stopped = True
+
+    async def error_wait(self, attempt_count):
+        """
+        네트워크 에러가 발생 했을 시, 잠시 asyncio.sleep합니다.
+        attempt_count가 많으면 많을 수록 오랬동안 쉽니다.
+        """
+        wait_time = min(2 ** attempt_count, self._MAX_ERROR_WAIT_TIME)
+        await asyncio.sleep(wait_time)
 
 
 class CollectManager:
