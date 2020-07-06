@@ -14,12 +14,12 @@ logger = logging.getLogger(__name__)
 
 
 class CodeforcesData(ContestData):
-    def __init__(self, id_value, name, start_time):
+    def __init__(self, id_value: int, name, start_time):
         super().__init__(
-            id_value,
+            "CF" + str(id_value),
             name,
             datetime.fromtimestamp(start_time, LOCAL_TIMEZONE),
-            f"http://codeforces.com/contests/{id_value}",
+            f"http://codeforces.com/contests/{str(id_value)}",
         )
 
 
@@ -27,7 +27,7 @@ class CodeforcesData(ContestData):
 class CFCollector(Collector):
     _TARG_URL = "http://codeforces.com/api/contest.list?gym=false&lang=en"
 
-    async def getData(self, noticeOn=True):
+    async def collect(self):
         ret = []
         attempt_count = 0
         while True:

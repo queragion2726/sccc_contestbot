@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 
 class BaekjoonData(ContestData):
-    def __init__(self, id_value, name, start_time):
+    def __init__(self, id_value: str, name, start_time):
         super().__init__(
-            id_value,
+            "BOJ" + id_value,
             name,
             start_time,
             f"https://www.acmicpc.net/contest/view/{id_value}",
