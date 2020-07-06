@@ -18,8 +18,7 @@ def test_renewal_contest(contest_manager, db_session, event_loop):
     # 컨테스트 추가 테스트
     contest_manager.renewal_call_back = MagicMock()
 
-    current_time = datetime.now()
-    test_contest = ContestData("A", "A", current_time, "A")
+    test_contest = ContestData("A", "A", datetime.now(), "A")
 
     event_loop.run_until_complete(contest_manager.renewal_contest(test_contest))
     contest_manager.renewal_call_back.assert_called_with(
@@ -31,7 +30,6 @@ def test_renewal_contest(contest_manager, db_session, event_loop):
 
     # 똑같은 컨테스트 중복 테스트
 
-    test_contest = ContestData("A", "A", current_time, "A")
     contest_manager.renewal_call_back = MagicMock()
     event_loop.run_until_complete(contest_manager.renewal_contest(test_contest))
     assert not contest_manager.renewal_call_back.called
