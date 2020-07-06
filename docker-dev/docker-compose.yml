@@ -36,6 +36,8 @@ services:
             - PYTHONUNBUFFERED=0
         volumes:
             - ../:/app/
+        ports: 
+            - "443:443"
         secrets:
             - db_password
             - slack_token
