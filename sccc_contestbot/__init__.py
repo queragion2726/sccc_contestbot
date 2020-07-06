@@ -4,15 +4,17 @@ import threading
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from typing import List
 
 import slack
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, scoped_session
 
 import settings
-from .models import Base, Contest, Subscriber
+from .models import Base, Contest, Subscriber, ContestData
 from .sub_manager import SubManager
 from .contest_manager import ContestManager, RenewalFlag
+from sccc_contestbot.collectors import CollectManager
 
 
 def init_logger(mod_name):
@@ -63,6 +65,9 @@ class ContestBot:
         self.web_client = slack.WebClient(
             token=token, run_async=True, loop=self.event_loop
         )
+
+        slack.RTMClient.run_on(event="message")(self.message_listener)
+
         logger.info("슬랙 클라이언트 초기화 완료")
 
         # DB 엔진 초기화
@@ -107,7 +112,11 @@ class ContestBot:
             self.event_loop, self.thread_local_data, self.renewal_call_back
         )
 
-        # TODO: 파서 추가
+        # 컬렉터 관리자 생성
+
+        self.collect_manager = CollectManager(
+            self.event_loop, self.contest_update_call_back
+        )
 
     def test_db(self, engine, connect_try_count=5) -> bool:
         """
@@ -147,6 +156,9 @@ class ContestBot:
         """
         loop = self.event_loop
 
+        # 크롤링 시작 예약
+        self.collect_manager.run()
+
         rtm_client_future = self.rtm_client.start()
 
         try:
@@ -159,3 +171,53 @@ class ContestBot:
 
     def renewal_call_back(self, contest: Contest, flag: RenewalFlag):
         pass
+
+    def contest_update_call_back(self, contests: List[ContestData]):
+        pass
+
+    async def message_listener(self, **payload):
+        """
+        슬랙 채널에서 받아온 메시지들을 분류해 처리합니다.
+        """
+        data = payload["data"]
+
+        if "user" in data:
+            # 유저의 메시지
+            if settings.SUBSCRIBE_KEYWORD == data["txt"]:
+                # 구독자 등록
+                await self.add_subscriber(**payload)
+            elif settings.UNSUBSCRIBE_KEYWORD == data["txt"]:
+                # 구독자 제거
+                await self.delete_subscriber(**payload)
+            elif settings.HELP_KEYWORD == data["txt"]:
+                # 도움말 메시지
+                await self.post_help_message(**payload)
+            elif "!TEST" == data["txt"]:
+                # 테스트용
+                await self.post_test_message(**payload)
+        if (
+            "subtype" in data
+            and data["subtype"] == "bot_message"
+            and "thread_ts" not in data
+            and "blocks" in data
+        ):
+            # 구독자에게 알림을 보내줘야하는 메시지를 판단합니다.
+            if data["text"] == settings.HELP_DISPLAY_TXT:
+                return
+            await self.post_subscriber(**payload)
+
+    async def add_subscriber(self, **payload):
+        pass
+
+    async def delete_subscriber(self, **payload):
+        pass
+
+    async def post_help_message(self, **payload):
+        pass
+
+    async def post_test_message(self, **payload):
+        pass
+
+    async def post_subscriber(self, **payload):
+        pass
+
