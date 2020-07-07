@@ -1,8 +1,8 @@
 import asyncio
 import logging
 import threading
-import sys
 import time
+from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from typing import List
 
@@ -12,24 +12,11 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 
 import settings
 from .models import Base, Contest, Subscriber, ContestData
-from .sub_manager import SubManager
+from .sub_manager import SubManager, AleadyExistsEception, NoSuchUserException
 from .contest_manager import ContestManager, RenewalFlag
+from timeStrategy import TimeStrategy
 from sccc_contestbot.collectors import CollectManager
-
-
-def init_logger(mod_name):
-    """
-    모듈별 로거를 생성합니다.
-    """
-    logger = logging.getLogger(mod_name)
-    handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter(
-        "%(asctime)s : %(levelname)-8s: [%(name)s] : %(message)s"
-    )
-    handler.setFormatter(formatter)
-
-    logger.addHandler(handler)
-    logger.setLevel(logging.DEBUG)
+from sccc_contestbot.logger import init_logger
 
 
 init_logger(__name__)
@@ -118,6 +105,12 @@ class ContestBot:
             self.event_loop, self.contest_update_call_back
         )
 
+        from .collectors.boj_collector import BOJCollector
+        from .collectors.cf_collector import CFCollector
+
+        self.collect_manager.register(BOJCollector)
+        self.collect_manager.register(CFCollector)
+
     def test_db(self, engine, connect_try_count=5) -> bool:
         """
         DB 커넥션을 테스트해보고,
@@ -156,24 +149,87 @@ class ContestBot:
         """
         loop = self.event_loop
 
-        # 크롤링 시작 예약
-        self.collect_manager.run()
-
-        rtm_client_future = self.rtm_client.start()
-
         try:
             with self.thread_pool_executor as pool:
                 # 루프의 기본 실행자를 pool로 설정합니다
                 loop.set_default_executor(pool)
-                loop.run_until_complete(rtm_client_future)
+                # 크롤링 시작 예약
+                self.collect_manager.run()
+                self.rtm_client.start()
+                loop.run_forever()
         finally:
             loop.close()
 
     def renewal_call_back(self, contest: Contest, flag: RenewalFlag):
-        pass
+        """
+        기존에 저장된 콘테스트와 ContestManager가 받은 컨테스트가 다를 경우,
+        이 콜백이 호출됩니다. 
+        """
+        format_dict = {
+            "name": contest.contest_name,
+            "datetime": str(contest.start_date),
+            "URL": contest.URL,
+        }
+
+        if flag == RenewalFlag.CREATED:
+            txt = settings.NEW_NOTICE_TXT % format_dict
+            msg = settings.NEW_NOTICE_MESSAGE % format_dict
+        elif flag == RenewalFlag.CHANGED:
+            txt = settings.MODIFIED_NOTICE_TXT % format_dict
+            msg = settings.NEW_NOTICE_MESSAGE % format_dict
+
+        # 알림 추가
+        for time_strategy in settings.NOTI_STRATEGIES:
+            delay = (
+                contest.start_date
+                - datetime.now(tz=settings.LOCAL_TIMEZONE)
+                - time_strategy.delta
+            )
+            self.event_loop.call_later(
+                delay, self.noti_call_back, contest, time_strategy
+            )
+
+        self.web_client.chat_postMessage(
+            channel=settings.POST_CHANNEL, text=txt, blocks=msg,
+        )
+
+    def noti_call_back(self, contest: ContestData, time_strategy: TimeStrategy):
+        """
+        알림 콜백입니다. 대회가 얼마나 남았는지 포스트합니다.
+        또한 이제 제거해야할 대회라면, 삭제를 요청합니다.
+        """
+
+        async def _impl_noti():
+            if not (await self.contest_manager.is_latest(contest)):
+                # 알림이 설정되었고 그 사이에 변경이 발생했다면
+                # 이 알림은 무시됩니다.
+                return
+
+            if time_strategy == settings.NOTI_STRATEGIES.END:
+                # 대회가 시작한 시점에 실행됩니다.
+                # 대회를 삭제합니다.
+                await self.contest_manager.delete_contest(contest)
+                return
+
+            format_dict = {
+                "name": contest.contest_name,
+                "datetime": str(contest.start_date),
+                "URL": contest.URL,
+                "remain": time_strategy.displayText,
+            }
+
+            await self.web_client.chat_postMessage(
+                channel=settings.POST_CHANNEL,
+                text=settings.NOTI_NOTICE_TXT,
+                blocks=settings.NOTI_NOTICE_MESSAGE % format_dict,
+            )
 
     def contest_update_call_back(self, contests: List[ContestData]):
-        pass
+        """
+        collector가 크롤링에 성공하였다면 이 콜백이 실행됩니다.
+        """
+        for contest in contests:
+            self.event_loop.create_task(self.contest_manager.renewal_contest(contest))
 
     async def message_listener(self, **payload):
         """
@@ -183,16 +239,16 @@ class ContestBot:
 
         if "user" in data:
             # 유저의 메시지
-            if settings.SUBSCRIBE_KEYWORD == data["txt"]:
+            if settings.SUBSCRIBE_KEYWORD == data["text"]:
                 # 구독자 등록
                 await self.add_subscriber(**payload)
-            elif settings.UNSUBSCRIBE_KEYWORD == data["txt"]:
+            elif settings.UNSUBSCRIBE_KEYWORD == data["text"]:
                 # 구독자 제거
                 await self.delete_subscriber(**payload)
-            elif settings.HELP_KEYWORD == data["txt"]:
+            elif settings.HELP_KEYWORD == data["text"]:
                 # 도움말 메시지
                 await self.post_help_message(**payload)
-            elif "!TEST" == data["txt"]:
+            elif "!TEST" == data["text"]:
                 # 테스트용
                 await self.post_test_message(**payload)
         if (
@@ -207,17 +263,87 @@ class ContestBot:
             await self.post_subscriber(**payload)
 
     async def add_subscriber(self, **payload):
-        pass
+        """
+        구독자를 추가하고 결과를 포스트합니다.
+        """
+        logger.info("add_subscriber 호출")
+        data = payload["data"]
+        web_client = payload["web_client"]
+        channel_id = data["channel"]
+        try:
+            await self.sub_manager.add_subscriber(data["user"])
+            await web_client.chat_postMessage(
+                channel=channel_id, text=settings.APPEND_SUCCESS
+            )
+        except AleadyExistsEception:
+            await web_client.chat_postMessage(
+                channel=channel_id, text=settings.ALREADY_EXISTS,
+            )
 
     async def delete_subscriber(self, **payload):
-        pass
+        """
+        구독자를 삭제하고 결과를 포스트합니다.
+        """
+        logger.info("delete_subscriber 호출")
+        data = payload["data"]
+        web_client = payload["web_client"]
+        channel_id = data["channel"]
+        try:
+            await self.sub_manager.delete_subscriber(data["user"])
+            await web_client.chat_postMessage(
+                channel=channel_id, text=settings.DELETE_SUCCESS
+            )
+        except NoSuchUserException:
+            await web_client.chat_postMessage(
+                channel=channel_id, text=settings.NO_SUCH_USER
+            )
 
     async def post_help_message(self, **payload):
-        pass
+        """
+        도움말 메시지를 출력합니다.
+        """
+        logger.info("post_help_message 호출")
+        data = payload["data"]
+        web_client = payload["web_client"]
+        channel_id = data["channel"]
+        await web_client.chat_postMessage(
+            channel=channel_id,
+            text=settings.HELP_DISPLAY_TXT,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": settings.HELP_MESSAGE},
+                }
+            ],
+        )
 
     async def post_test_message(self, **payload):
-        pass
+        logger.info("post_test_message 호출")
+        await payload["web_client"].chat_postMessage(
+            channel=settings.POST_CHANNEL,
+            text="test!",
+            blocks=[{"type": "section", "text": {"type": "mrkdwn", "text": "Test"}}],
+        )
 
     async def post_subscriber(self, **payload):
-        pass
+        data = payload["data"]
+        web_client = payload["web_client"]
+        thread_ts = data["ts"]
+
+        subscribers = await self.sub_manager.get_subscriber()
+        sub_text = " ".join(f"<@{user}>" for user in subscribers)
+        if sub_text == "":
+            return
+
+        # 알림용 텍스트는, 스레드의 원텍스트를 가져옵니다.
+        display_noti_text = data["blocks"][0]["text"]["text"]
+
+        await web_client.chat_postMessage(
+            channel=settings.POST_CHANNEL,
+            text=display_noti_text,
+            blocks=[
+                {"type": "context", "elements": [{"type": "mrkdwn", "text": sub_text}]}
+            ],
+            thread_ts=thread_ts,
+        )
 
