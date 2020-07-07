@@ -38,6 +38,7 @@ services:
             - ../:/app/
         ports: 
             - "443:443"
+            - "80:80"
         secrets:
             - db_password
             - slack_token
