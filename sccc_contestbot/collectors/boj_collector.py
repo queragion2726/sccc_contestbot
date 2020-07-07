@@ -6,11 +6,9 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 from settings import LOCAL_TIMEZONE
-from sccc_contestbot import init_logger
 from sccc_contestbot.models import ContestData
 from . import Collector, CollectManager
 
-init_logger(__name__)
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +22,6 @@ class BaekjoonData(ContestData):
         )
 
 
-@CollectManager.register
 class BOJCollector(Collector):
     _TARGET_URL = "https://www.acmicpc.net/contest/official/list"
     _UPDATE_INTERVAL = 60 * 60  # 1시간

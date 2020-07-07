@@ -1,4 +1,8 @@
 import asyncio
+import logging
+from typing import Type
+
+logger = logging.getLogger(__name__)
 
 
 class Collector:
@@ -76,13 +80,13 @@ class CollectManager:
 
     collector_list = []
 
-    @staticmethod
-    def register(collector: Collector):
+    def register(self, CollectorType: Type[Collector]):
         """
         CollectManger에 컬랙터를 등록합니다.
         """
-        CollectManager.collector_list.append(collector)
-        return collector
+        self.collector_list.append(
+            CollectorType(self.event_loop, self.update_call_back)
+        )
 
     def __init__(self, event_loop, update_call_back):
         self.event_loop = event_loop
@@ -101,4 +105,3 @@ class CollectManager:
         """
         for collector in self.collector_list:
             collector.stop()
-

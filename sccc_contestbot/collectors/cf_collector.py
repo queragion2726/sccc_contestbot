@@ -5,11 +5,9 @@ from datetime import datetime
 import aiohttp
 
 from settings import LOCAL_TIMEZONE
-from sccc_contestbot import init_logger
 from sccc_contestbot.models import ContestData
 from . import Collector, CollectManager
 
-init_logger(__name__)
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +21,6 @@ class CodeforcesData(ContestData):
         )
 
 
-@CollectManager.register
 class CFCollector(Collector):
     _TARG_URL = "http://codeforces.com/api/contest.list?gym=false&lang=en"
 
