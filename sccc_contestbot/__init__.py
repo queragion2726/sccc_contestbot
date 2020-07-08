@@ -185,7 +185,7 @@ class ContestBot:
                 contest.start_date
                 - datetime.now(tz=settings.LOCAL_TIMEZONE)
                 - time_strategy.delta
-            )
+            ).total_seconds()
             self.event_loop.call_later(
                 delay, self.noti_call_back, contest, time_strategy
             )
