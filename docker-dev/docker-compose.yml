@@ -1,0 +1,51 @@
+version: '3.1'
+# for development
+
+services: 
+    db:
+        image: postgres:12-alpine
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        environment: 
+            - POSTGRES_USER=contestbot
+            - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+            - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+        secrets:
+            - db_password
+    db-for-test:
+        image: postgres:12-alpine
+        environment:
+            - POSTGRES_USER=contestbot
+            - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+            - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+        secrets:
+            - db_password
+    contestbot:
+        build:
+            context: ..
+            dockerfile: ./docker-dev/Dockerfile
+        secrets:
+            - db_password
+        environment: 
+            - BOT_DB_NAME=contestbot
+            - BOT_DB_HOST=db
+            - BOT_DB_PORT=5432
+            - BOT_DB_USERNAME=contestbot
+            - BOT_DB_PASSWORD_FILE=/run/secrets/db_password
+            - BOT_SLACK_TOKEN_FILE=/run/secrets/slack_token
+            - PYTHONUNBUFFERED=0
+        volumes:
+            - ../:/app/
+        secrets:
+            - db_password
+            - slack_token
+        command: bash -c "pytest -v && python app.py"
+
+secrets:
+    db_password:
+        file: ../secrets/db_password.txt
+    slack_token:
+        file: ../secrets/slack_token.txt
+
+volumes:
+    db_data:

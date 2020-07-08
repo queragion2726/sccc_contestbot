@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "sccc_contestbot"
+version = "0.1.0"
+description = ""
+authors = ["queragion2726 <queragion2726@gmail.com>"]
+license = "Apache-2.0"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+slackclient = "^2.7.2"
+sqlalchemy = "^1.3.18"
+bs4 = "^0.0.1"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.5.3"
+black = "^19.10b0"
+rope = "^0.17.0"
+pytest = "^5.4.3"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
