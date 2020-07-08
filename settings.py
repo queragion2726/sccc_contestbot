@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from timeStrategy import TimeStrategy
+from sccc_contestbot.time_strategy import TimeStrategy
 from enum import Enum
 
 # 타임존
