@@ -1,4 +1,5 @@
 import functools
+import asyncio
 from enum import Enum
 
 from sccc_contestbot.models import Contest, ContestData
@@ -43,6 +44,7 @@ class ContestManager:
         self.event_loop = event_loop
         self.thread_local_data = thread_local_data
         self.renewal_call_back = renewal_call_back
+        self.lock = asyncio.Lock()
 
     async def renewal_contest(self, contest: ContestData):
         """
@@ -82,7 +84,10 @@ class ContestManager:
 
         _impl = functools.partial(_impl, self.thread_local_data)
 
-        result_flag = await self.event_loop.run_in_executor(executor=None, func=_impl)
+        async with self.lock:
+            result_flag = await self.event_loop.run_in_executor(
+                executor=None, func=_impl
+            )
 
         if result_flag is None:
             pass
@@ -108,7 +113,8 @@ class ContestManager:
 
         _impl = functools.partial(_impl, self.thread_local_data)
 
-        await self.event_loop.run_in_executor(executor=None, func=_impl)
+        async with self.lock:
+            await self.event_loop.run_in_executor(executor=None, func=_impl)
 
     async def is_latest(self, contest: ContestData) -> bool:
         """
