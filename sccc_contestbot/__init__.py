@@ -180,6 +180,7 @@ class ContestBot:
 
         # 알림 추가
         for time_strategy in settings.NOTI_STRATEGIES:
+            time_strategy = time_strategy.value
             delay = (
                 contest.start_date
                 - datetime.now(tz=settings.LOCAL_TIMEZONE)
