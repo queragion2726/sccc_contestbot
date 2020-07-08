@@ -1,6 +1,6 @@
 __pycache__/
-.vscode
-.venv
-log.log
+.pytest_cache/
+.vscode/
+.venv/
 
 secrets/
