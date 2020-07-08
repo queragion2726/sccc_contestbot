@@ -10,4 +10,3 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry export -f requirements.txt | pip install -r /dev/stdin
 
 COPY . .
-CMD python app.py
