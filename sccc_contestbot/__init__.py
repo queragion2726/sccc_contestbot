@@ -14,7 +14,7 @@ import settings
 from .models import Base, Contest, Subscriber, ContestData
 from .sub_manager import SubManager, AleadyExistsEception, NoSuchUserException
 from .contest_manager import ContestManager, RenewalFlag
-from timeStrategy import TimeStrategy
+from .time_strategy import TimeStrategy
 from sccc_contestbot.collectors import CollectManager
 from sccc_contestbot.logger import init_logger
 
