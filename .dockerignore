@@ -1,6 +1,12 @@
-img/
+.vscode/
+.venv/
+.pytest_cache/
+__pycache__/
+docker-dev/
+secrets/
+tests/
 
-db_password.txt
+img/
 
 *.md
 
