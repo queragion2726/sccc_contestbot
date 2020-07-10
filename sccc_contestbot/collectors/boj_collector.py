@@ -50,7 +50,7 @@ class BOJCollector(Collector):
                                 tzinfo=utc,
                             )
 
-                            if start_time < datetime.now(timezone.utc):
+                            if start_time < datetime.now(utc):
                                 break
 
                             data = BaekjoonData(id_value, name, start_time)
