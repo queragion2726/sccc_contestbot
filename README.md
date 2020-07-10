@@ -5,14 +5,12 @@
 ![Capture](img/Capture.jpg?raw=true)
 
 
-## 빌드
+## 레포지토리 클론
 
 ```sh
 git clone https://github.com/queragion2726/sccc_contestbot.git
 cd sccc_contestbot
-docker-compose build
 ```
-
 
 ## 기본 설정
 
@@ -32,8 +30,20 @@ vim secrets/slack_token.txt
 
 내부 디비에서 사용할 패스워드와 slack_token을 설정합니다.
 
+```sh
+chmod 660 secrets/db_password.txt
+chmod 660 secrets/slack_token.txt
+```
 
-## 실행 Run
+크게 상관은 없습니다만, 다른 유저의 읽기 권한을 없애주셔도 됩니다.
+
+## 빌드 
+
+```sh
+docker-compose build
+```
+
+## 실행 
 
 ```sh
 docker-compose up -d
