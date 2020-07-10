@@ -31,8 +31,8 @@ vim secrets/slack_token.txt
 내부 디비에서 사용할 패스워드와 slack_token을 설정합니다.
 
 ```sh
-chmod 660 secrets/db_password.txt
-chmod 660 secrets/slack_token.txt
+chmod 440 secrets/db_password.txt
+chmod 440 secrets/slack_token.txt
 ```
 
 크게 상관은 없습니다만, 다른 유저의 읽기 권한을 없애주셔도 됩니다.
