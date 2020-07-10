@@ -186,9 +186,11 @@ class ContestBot:
                 - datetime.now(tz=settings.LOCAL_TIMEZONE)
                 - time_strategy.delta
             ).total_seconds()
-            self.event_loop.call_later(
-                delay, self.noti_call_back, contest, time_strategy
-            )
+
+            if delay > 0:
+                self.event_loop.call_later(
+                    delay, self.noti_call_back, contest, time_strategy
+                )
 
         self.web_client.chat_postMessage(
             channel=settings.POST_CHANNEL, text=txt, blocks=msg,
