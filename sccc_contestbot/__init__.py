@@ -225,6 +225,8 @@ class ContestBot:
                 blocks=settings.NOTI_NOTICE_MESSAGE % format_dict,
             )
 
+        self.event_loop.create_task(_impl_noti())
+
     def contest_update_call_back(self, contests: List[ContestData]):
         """
         collector가 크롤링에 성공하였다면 이 콜백이 실행됩니다.
