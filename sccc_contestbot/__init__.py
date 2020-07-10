@@ -167,7 +167,7 @@ class ContestBot:
         """
         format_dict = {
             "name": contest.contest_name,
-            "datetime": str(contest.start_date),
+            "datetime": str(contest.start_date.astimezone(settings.LOCAL_TIMEZONE)),
             "URL": contest.URL,
         }
 
@@ -214,7 +214,7 @@ class ContestBot:
 
             format_dict = {
                 "name": contest.contest_name,
-                "datetime": str(contest.start_date),
+                "datetime": str(contest.start_date.astimezone(settings.LOCAL_TIMEZONE)),
                 "URL": contest.URL,
                 "remain": time_strategy.displayText,
             }

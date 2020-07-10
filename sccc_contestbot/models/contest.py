@@ -7,6 +7,13 @@ from . import Base
 
 
 class ContestData:
+    """
+    Contest ORM 객체의 스칼라 클래스입니다.
+    
+    Args:
+        start_date : UTC+0을 기준으로 한 datetime.datetime 객체가 필요합니다.
+    """
+
     def __init__(
         self,
         contest_id: str,
@@ -36,7 +43,7 @@ class Contest(Base):
     id = Column(Integer, primary_key=True)
     contest_id = Column(String(32), unique=True)
     contest_name = Column(String(128))
-    start_date = Column(DateTime)
+    start_date = Column(DateTime(timezone=True))
     URL = Column(String(512))
     hash_value = Column(String(32))
 

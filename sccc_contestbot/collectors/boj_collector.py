@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 import aiohttp
 from bs4 import BeautifulSoup
+from pytz import utc
 
 from settings import LOCAL_TIMEZONE
 from sccc_contestbot.models import ContestData
@@ -46,7 +47,7 @@ class BOJCollector(Collector):
                             start_time = contents[7].text
                             start_time = datetime(
                                 *map(int, self._RE_REPR.findall(start_time)),
-                                tzinfo=LOCAL_TIMEZONE,
+                                tzinfo=utc,
                             )
 
                             if start_time < datetime.now(timezone.utc):

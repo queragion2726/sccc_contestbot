@@ -3,6 +3,7 @@ import logging
 from datetime import datetime
 
 import aiohttp
+from pytz import utc
 
 from settings import LOCAL_TIMEZONE
 from sccc_contestbot.models import ContestData
@@ -16,7 +17,7 @@ class CodeforcesData(ContestData):
         super().__init__(
             "CF" + str(id_value),
             name,
-            datetime.fromtimestamp(start_time, LOCAL_TIMEZONE),
+            datetime.fromtimestamp(start_time, utc),
             f"http://codeforces.com/contests/{str(id_value)}",
         )
 

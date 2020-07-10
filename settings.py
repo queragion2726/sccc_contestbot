@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
+from pytz import timezone
 from sccc_contestbot.time_strategy import TimeStrategy
 from enum import Enum
 
 # 타임존
-LOCAL_TIMEZONE = datetime.now().astimezone().tzinfo
+LOCAL_TIMEZONE = timezone("Asia/Seoul")
 # 포스팅할 채널을 의미합니다.
 POST_CHANNEL = "#dev-playground"
 
