@@ -35,9 +35,9 @@ services:
 
 secrets:
     db_password:
-        file: ../secrets/db_password.txt
+        file: ./secrets/db_password.txt
     slack_token:
-        file: ../secrets/slack_token.txt
+        file: ./secrets/slack_token.txt
 
 volumes:
     db_data:
