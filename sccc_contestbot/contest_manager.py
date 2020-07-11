@@ -21,7 +21,7 @@ class ContestManager:
             컨테스트 갱신시, 새로 추가되었거나 바뀐사항이 있을 경우
             이 콜백을 호출합니다.
             콜백은 다음과 같은 꼴을 만족해야합니다.
-            def renewal_call_back(contest:Contest, flag:RenewalFlag)
+            def renewal_call_back(contest:ContestData, flag:RenewalFlag)
 
     참고:
         sqlalchemy의 API는 block을 유발하기 때문에,

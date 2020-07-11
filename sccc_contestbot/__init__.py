@@ -160,7 +160,7 @@ class ContestBot:
         finally:
             loop.close()
 
-    def renewal_call_back(self, contest: Contest, flag: RenewalFlag):
+    def renewal_call_back(self, contest: ContestData, flag: RenewalFlag):
         """
         기존에 저장된 콘테스트와 ContestManager가 받은 컨테스트가 다를 경우,
         이 콜백이 호출됩니다. 
