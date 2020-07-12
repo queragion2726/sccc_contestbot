@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pytest
 from unittest.mock import MagicMock
+from pytz import utc
 
 from sccc_contestbot.models import Contest, ContestData
 from sccc_contestbot.contest_manager import RenewalFlag
@@ -18,7 +19,7 @@ def test_renewal_contest(contest_manager, db_session, event_loop):
     # 컨테스트 추가 테스트
     contest_manager.renewal_call_back = MagicMock()
 
-    test_contest = ContestData("A", "A", datetime.now(), "A")
+    test_contest = ContestData("A", "A", datetime.now(utc), "A")
 
     event_loop.run_until_complete(contest_manager.renewal_contest(test_contest))
     contest_manager.renewal_call_back.assert_called_with(
@@ -35,7 +36,7 @@ def test_renewal_contest(contest_manager, db_session, event_loop):
     assert not contest_manager.renewal_call_back.called
 
     # 콘테스트 변경 테스트
-    new_contest = ContestData("A", "B", datetime.now(), "BB")
+    new_contest = ContestData("A", "B", datetime.now(utc), "BB")
     event_loop.run_until_complete(contest_manager.renewal_contest(new_contest))
     contest_manager.renewal_call_back.assert_called_with(
         new_contest, RenewalFlag.CHANGED
@@ -53,7 +54,7 @@ def test_delete_contest(contest_manager, db_session, event_loop):
     콘테스트 삭제 테스트
     """
 
-    test_data = ContestData("A", "A", datetime.now(), "A")
+    test_data = ContestData("A", "A", datetime.now(utc), "A")
 
     # 데이터가 없으니 삭제되지 않고, 예외도 뜨면 안된다.
     event_loop.run_until_complete(contest_manager.delete_contest(test_data))
@@ -69,7 +70,7 @@ def test_is_latest(contest_manager, db_session_maker, event_loop):
     """
     특정한 콘테스트가 최신인지 확인하는 기능을 테스트합니다.
     """
-    test_contest = ContestData("ID", "A", datetime.now(), "B")
+    test_contest = ContestData("ID", "A", datetime.now(utc), "B")
     assert False == event_loop.run_until_complete(
         contest_manager.is_latest(test_contest)
     )
@@ -88,7 +89,7 @@ def test_is_latest(contest_manager, db_session_maker, event_loop):
     # 두번째 세션, 콘테스트 변경 후, 검사
     db_session = db_session_maker()
 
-    changed_contest = ContestData("ID", "AA", datetime.now(), "BB")
+    changed_contest = ContestData("ID", "AA", datetime.now(utc), "BB")
     db_session.query(Contest).filter(Contest.contest_id == "ID").update(
         {
             Contest.contest_name: changed_contest.contest_name,
