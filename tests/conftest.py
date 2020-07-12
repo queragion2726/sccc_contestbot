@@ -85,6 +85,12 @@ def temp_db_data(db_session, datas):
 
     yield db_session
 
+    # 데이터들을 삭제합니다.
+    # context 내부에서 데이터가 삭제되었을 경우를 상정합니다.
+    # 이미 삭제했을 경우 commit에서 예외가 발생 후 db_session.rollback 이 실행됩니다.
+    # 이를 막고 처리합니다.
+    db_session.commit()
+
     for data in datas:
         try:
             db_session.delete(data)
