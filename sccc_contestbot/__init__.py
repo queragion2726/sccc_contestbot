@@ -164,6 +164,8 @@ class ContestBot:
         """
         기존에 저장된 콘테스트와 ContestManager가 받은 컨테스트가 다를 경우,
         이 콜백이 호출됩니다. 
+
+        받은 flag 종류에 따라 다른메시지를 전송하고, 새로바뀐 데이터로 알림을 다시 설정합니다.
         """
         format_dict = {
             "name": contest.contest_name,

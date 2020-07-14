@@ -122,6 +122,7 @@ class ContestManager:
 
         returns:
             최신정보와 동일하다면 True, 아니면 False를 반환합니다.
+            대회정보가 존재하지 않아도 False를 반환합니다.
         """
 
         def _impl(thread_local_data):
