@@ -178,7 +178,7 @@ class ContestBot:
             msg = settings.NEW_NOTICE_MESSAGE % format_dict
         elif flag == RenewalFlag.CHANGED:
             txt = settings.MODIFIED_NOTICE_TXT % format_dict
-            msg = settings.NEW_NOTICE_MESSAGE % format_dict
+            msg = settings.MODIFIED_NOTICE_MESSAGE % format_dict
 
         # 알림 추가
         for time_strategy in settings.NOTI_STRATEGIES:

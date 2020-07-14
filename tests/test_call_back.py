@@ -48,7 +48,7 @@ def test_renewal_call_back(monkeypatch, bot):
 
     # CHANGED 테스트
     result_list = []
-    bot.renewal_call_back(test_contest, RenewalFlag.CREATED)
+    bot.renewal_call_back(test_contest, RenewalFlag.CHANGED)
     for item in settings.NOTI_STRATEGIES:
         assert (test_contest, item.value,) in result_list
 
